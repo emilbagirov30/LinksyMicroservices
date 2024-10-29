@@ -4,15 +4,12 @@ public class EmailRequest {
     private String to;
     private String title;
     private String body;
+
     public EmailRequest() {
+    }
+    public EmailRequest(String to, String title, String body) {
         this.to = to;
         this.title = title;
-        this.body = body;
-    }
-
-    public EmailRequest(String to, String subject, String body) {
-        this.to = to;
-        this.title = subject;
         this.body = body;
     }
 

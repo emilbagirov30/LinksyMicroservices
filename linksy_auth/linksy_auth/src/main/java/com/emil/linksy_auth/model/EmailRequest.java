@@ -5,10 +5,11 @@ public class EmailRequest {
     private String title;
     private String body;
 
-
-    public EmailRequest(String to, String subject, String body) {
+    public EmailRequest() {
+    }
+    public EmailRequest(String to, String title, String body) {
         this.to = to;
-        this.title = subject;
+        this.title = title;
         this.body = body;
     }
 
