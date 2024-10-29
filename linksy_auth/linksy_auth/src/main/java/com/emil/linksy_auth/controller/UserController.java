@@ -20,7 +20,7 @@ class UserController {
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody UserRegistrationDto userDto) {
         userService.registerUser(userDto.getUsername(), userDto.getEmail(), userDto.getPassword());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @PostMapping("/confirm")
