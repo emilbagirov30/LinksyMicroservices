@@ -37,7 +37,8 @@ public class UserService {
         String code = CodeGenerator.generate(email);
         pendingUsers.put(email, user);
 
-        EmailRequest emailRequest = new EmailRequest(email, "Код подтверждения Linksy: ", code);
+        EmailRequest emailRequest = new EmailRequest(email, "Confirmation code", "Your email verification code: " + code + ".\n"
+        + "Do not share it with anyone!");
         kafkaTemplate.send("emails", emailRequest);
 
     }
