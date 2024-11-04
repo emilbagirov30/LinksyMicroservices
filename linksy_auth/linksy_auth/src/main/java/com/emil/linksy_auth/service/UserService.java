@@ -6,6 +6,7 @@ import com.emil.linksy_auth.model.User;
 import com.emil.linksy_auth.exception.UserAlreadyExistsException;
 import com.emil.linksy_auth.repository.UserRepository;
 import com.emil.linksy_auth.util.CodeGenerator;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,6 +19,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final KafkaTemplate<String, EmailRequest> kafkaTemplate;
     private final Map<String, User> pendingUsers = new HashMap<>();
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     public UserService(UserRepository userRepository, KafkaTemplate<String, EmailRequest> kafkaTemplate) {
         this.userRepository = userRepository;
         this.kafkaTemplate = kafkaTemplate;
@@ -30,7 +32,7 @@ public class UserService {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         user.setAvatarUrl("");
         pendingUsers.put(email, user);
         sendCode(email);
