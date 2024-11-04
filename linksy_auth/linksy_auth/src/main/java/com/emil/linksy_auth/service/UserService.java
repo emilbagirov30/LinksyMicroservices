@@ -27,29 +27,33 @@ public class UserService {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
         }
-
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(password);
         user.setAvatarUrl("");
-
-        String code = CodeGenerator.generate(email);
         pendingUsers.put(email, user);
-
-        EmailRequest emailRequest = new EmailRequest(email, "Confirmation code", "Your email verification code: " + code + ".\n"
-        + "Do not share it with anyone!");
-        kafkaTemplate.send("emails", emailRequest);
-
+        sendCode(email);
     }
-    public User confirmCode(String email, String code) {
+
+    private EmailRequest getEmailRequest (String email){
+        String code = CodeGenerator.generate(email);
+        return new EmailRequest( email,"Confirmation code", "Your email verification code: " + code + ".\n"
+                + "Do not share it with anyone!");
+    }
+
+    public void sendCode (String email){
+        kafkaTemplate.send("emails", getEmailRequest(email));
+    }
+
+    public void confirmCode(String email, String code) {
         User user = pendingUsers.get(email);
         if (user == null || !CodeGenerator.isValidCode(email,code)) {
             throw new InvalidVerificationCodeException("Неверный код подтверждения");
         }
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
         pendingUsers.remove(email);
         CodeGenerator.removeCode(email);
-        return savedUser;
     }
+
 }

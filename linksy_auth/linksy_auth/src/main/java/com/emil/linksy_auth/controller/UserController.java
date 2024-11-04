@@ -25,9 +25,17 @@ class UserController {
 
     @PostMapping("/confirm")
     public ResponseEntity<User> confirmCode(@RequestParam String email, @RequestParam String code) {
-        User confirmedUser = userService.confirmCode(email, code);
-        return ResponseEntity.ok(confirmedUser);
+        userService.confirmCode(email, code);
+        return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/resend_code")
+    public ResponseEntity<User> resendCode(@RequestParam String email) {
+    userService.sendCode(email);
+    return ResponseEntity.ok().build();
+    }
+
+
     @ExceptionHandler(InvalidVerificationCodeException.class)
     public ResponseEntity<Void> handleInvalidVerificationCode(InvalidVerificationCodeException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
