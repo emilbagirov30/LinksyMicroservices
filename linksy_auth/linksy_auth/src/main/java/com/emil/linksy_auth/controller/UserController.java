@@ -1,6 +1,7 @@
 package com.emil.linksy_auth.controller;
 import com.emil.linksy_auth.exception.InvalidVerificationCodeException;
 import com.emil.linksy_auth.exception.UserNotFoundException;
+import com.emil.linksy_auth.model.ChangePassword;
 import com.emil.linksy_auth.model.User;
 import com.emil.linksy_auth.exception.UserAlreadyExistsException;
 import com.emil.linksy_auth.model.UserLogin;
@@ -54,8 +55,8 @@ class UserController {
     }
 
     @PostMapping("/confirm_password_change")
-    public ResponseEntity<Void> confirmPasswordChange(@RequestParam String email, @RequestParam String code, @RequestParam String newPassword) {
-        userService.confirmPasswordChange(email, code, newPassword);
+    public ResponseEntity<Void> confirmPasswordChange(@RequestBody ChangePassword changePassword) {
+        userService.confirmPasswordChange(changePassword.getEmail(), changePassword.getCode(), changePassword.getNewPassword());
         return ResponseEntity.ok().build(); // 200
     }
 

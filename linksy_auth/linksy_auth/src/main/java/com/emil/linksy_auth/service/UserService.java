@@ -50,7 +50,7 @@ public class UserService {
     }
 
     public void sendCodeToConfirmThePasswordChange (String email){
-        kafkaTemplate.send("emails", getEmailRequest(email, "Your password change code:: "));
+        kafkaTemplate.send("emails", getEmailRequest(email, "Your password change code: "));
     }
 
     public void confirmCode(String email, String code) {
