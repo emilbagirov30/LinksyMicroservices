@@ -2,6 +2,7 @@ package com.emil.linksy_auth.controller;
 import com.emil.linksy_auth.exception.InvalidVerificationCodeException;
 import com.emil.linksy_auth.model.User;
 import com.emil.linksy_auth.exception.UserAlreadyExistsException;
+import com.emil.linksy_auth.model.UserLogin;
 import com.emil.linksy_auth.model.UserRegistrationDto;
 import com.emil.linksy_auth.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,16 @@ class UserController {
     public ResponseEntity<User> resendCode(@RequestParam String email) {
     userService.sendCode(email);
     return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Void> logIn(@RequestBody UserLogin userLogin) {
+        boolean success = userService.logIn(userLogin.getEmail(), userLogin.getPassword());
+        if (success) {
+            return ResponseEntity.ok().build(); // 200
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        }
     }
 
 

@@ -58,4 +58,13 @@ public class UserService {
         CodeGenerator.removeCode(email);
     }
 
+    public boolean validatePassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    public boolean logIn(String email, String password) {
+        return userRepository.findByEmail(email)
+                .map(user -> validatePassword(password, user.getPassword()))
+                .orElse(false);
+    }
 }
