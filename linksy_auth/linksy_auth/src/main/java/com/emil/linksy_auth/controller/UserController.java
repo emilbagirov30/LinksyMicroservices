@@ -1,5 +1,6 @@
 package com.emil.linksy_auth.controller;
 import com.emil.linksy_auth.exception.InvalidVerificationCodeException;
+import com.emil.linksy_auth.exception.UserNotFoundException;
 import com.emil.linksy_auth.model.User;
 import com.emil.linksy_auth.exception.UserAlreadyExistsException;
 import com.emil.linksy_auth.model.UserLogin;
@@ -32,7 +33,7 @@ class UserController {
 
     @PostMapping("/resend_code")
     public ResponseEntity<User> resendCode(@RequestParam String email) {
-    userService.sendCode(email);
+    userService.sendCodeToConfirmTheMail(email);
     return ResponseEntity.ok().build();
     }
 
@@ -46,7 +47,22 @@ class UserController {
         }
     }
 
+    @PostMapping("/request_password_change")
+    public ResponseEntity<Void> requestPasswordChange(@RequestParam String email) {
+        userService.requestPasswordChange(email);
+        return ResponseEntity.ok().build(); // 200
+    }
 
+    @PostMapping("/confirm_password_change")
+    public ResponseEntity<Void> confirmPasswordChange(@RequestParam String email, @RequestParam String code, @RequestParam String newPassword) {
+        userService.confirmPasswordChange(email, code, newPassword);
+        return ResponseEntity.ok().build(); // 200
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Void> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+    }
     @ExceptionHandler(InvalidVerificationCodeException.class)
     public ResponseEntity<Void> handleInvalidVerificationCode(InvalidVerificationCodeException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401

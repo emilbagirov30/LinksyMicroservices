@@ -1,6 +1,7 @@
 package com.emil.linksy_auth.service;
 
 import com.emil.linksy_auth.exception.InvalidVerificationCodeException;
+import com.emil.linksy_auth.exception.UserNotFoundException;
 import com.emil.linksy_auth.model.EmailRequest;
 import com.emil.linksy_auth.model.User;
 import com.emil.linksy_auth.exception.UserAlreadyExistsException;
@@ -35,17 +36,21 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         user.setAvatarUrl("");
         pendingUsers.put(email, user);
-        sendCode(email);
+        sendCodeToConfirmTheMail(email);
     }
 
-    private EmailRequest getEmailRequest (String email){
+    private EmailRequest getEmailRequest (String email,String body){
         String code = CodeGenerator.generate(email);
-        return new EmailRequest( email,"Confirmation code", "Your email verification code: " + code + ".\n"
+        return new EmailRequest( email,"Confirmation code", body + code + ".\n"
                 + "Do not share it with anyone!");
     }
 
-    public void sendCode (String email){
-        kafkaTemplate.send("emails", getEmailRequest(email));
+    public void sendCodeToConfirmTheMail (String email){
+        kafkaTemplate.send("emails", getEmailRequest(email, "Your email verification code: "));
+    }
+
+    public void sendCodeToConfirmThePasswordChange (String email){
+        kafkaTemplate.send("emails", getEmailRequest(email, "Your password change code:: "));
     }
 
     public void confirmCode(String email, String code) {
@@ -55,6 +60,22 @@ public class UserService {
         }
         userRepository.save(user);
         pendingUsers.remove(email);
+        CodeGenerator.removeCode(email);
+    }
+    public void requestPasswordChange(String email) {
+        if (!userRepository.findByEmail(email).isPresent()) {
+            throw new UserNotFoundException("Пользователь с таким email не зарегистрирован");
+        }
+        sendCodeToConfirmThePasswordChange(email);
+    }
+
+    public void confirmPasswordChange(String email, String code, String newPassword) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Пользователь с таким email не найден"));
+        if (!CodeGenerator.isValidCode(email, code)) {
+            throw new InvalidVerificationCodeException("Неверный код подтверждения");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
         CodeGenerator.removeCode(email);
     }
 
