@@ -12,7 +12,6 @@ public class CodeGenerator {
         return code;
     }
 
-
     public static boolean isValidCode(String email, String code) {
         return code.equals(codes.get(email));
     }
