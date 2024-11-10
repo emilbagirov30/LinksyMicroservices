@@ -1,23 +1,12 @@
 package com.emil.linksy_user.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public class ChangePassword {
     private String email;
     private String newPassword;
     private String code;
-
-    public ChangePassword(String email, String newPassword, String code) {
-        this.email = email;
-        this.newPassword = newPassword;
-        this.code = code;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public String getCode() {
-        return code;
-    }
 }

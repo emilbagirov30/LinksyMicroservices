@@ -1,17 +1,13 @@
 package com.emil.linksy_user.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
 public class UserLogin {
     private String email;
     private String password;
-    public UserLogin(String email, String password) {
-        this.email = email;
-        this.password = password;
-    }
-    public String getEmail() {
-        return email;
-
-    }
-    public String getPassword() {
-        return password;
-    }
 }
