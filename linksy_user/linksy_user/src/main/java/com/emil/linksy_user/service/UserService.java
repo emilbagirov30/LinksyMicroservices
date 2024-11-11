@@ -1,17 +1,19 @@
 package com.emil.linksy_user.service;
 
+import com.emil.linksy_user.exception.InvalidTokenException;
 import com.emil.linksy_user.exception.InvalidVerificationCodeException;
 import com.emil.linksy_user.exception.UserNotFoundException;
 import com.emil.linksy_user.exception.UserAlreadyExistsException;
 import com.emil.linksy_user.model.EmailRequest;
+import com.emil.linksy_user.model.Token;
 import com.emil.linksy_user.model.User;
 import com.emil.linksy_user.repository.UserRepository;
+import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.util.CodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +24,7 @@ public class UserService {
     private final KafkaTemplate<String, EmailRequest> kafkaTemplate;
     private final Map<String, User> pendingUsers = new HashMap<>();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
+    private final JwtToken jwtToken;
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
@@ -81,9 +83,32 @@ public class UserService {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
-    public boolean logIn(String email, String password) {
+    public Token logIn(String email, String password) {
         return userRepository.findByEmail(email)
-                .map(user -> validatePassword(password, user.getPassword()))
-                .orElse(false);
+                .filter(user -> validatePassword(password, user.getPassword()))
+                .map(user -> {
+                    String accessToken = jwtToken.generateAccessToken(user.getId().toString());
+                    String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
+                   return new Token(accessToken,refreshToken);
+                })
+                .orElseThrow(() -> new UserNotFoundException("Invalid email or password"));
+    }
+
+    public Token refreshAccessToken(String refreshToken) {
+        if (!jwtToken.validateToken(refreshToken)) {
+            throw new InvalidTokenException("Invalid refresh token");
+        }
+
+        String userId = jwtToken.extractUserId(refreshToken);
+        userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        String newAccessToken = jwtToken.generateAccessToken(userId);
+        String newRefreshToken = refreshToken;
+        if (jwtToken.needsRefreshRenewal(refreshToken)) {
+            newRefreshToken = jwtToken.generateRefreshToken(userId);
+        }
+
+        return new Token(newAccessToken, newRefreshToken);
     }
 }
+
