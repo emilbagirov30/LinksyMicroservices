@@ -7,6 +7,7 @@ import com.emil.linksy_user.exception.UserAlreadyExistsException;
 import com.emil.linksy_user.model.EmailRequest;
 import com.emil.linksy_user.model.Token;
 import com.emil.linksy_user.model.User;
+import com.emil.linksy_user.model.UserData;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.util.CodeGenerator;
@@ -33,7 +34,7 @@ public class UserService {
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setAvatar_url("");
+        user.setAvatar_url("null");
         pendingUsers.put(email, user);
         sendCodeToConfirmTheMail(email);
     }
@@ -95,11 +96,11 @@ public class UserService {
     }
 
     public Token refreshAccessToken(String refreshToken) {
-        if (!jwtToken.validateToken(refreshToken)) {
+        if (!jwtToken.validateRefreshToken(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
         }
 
-        String userId = jwtToken.extractUserId(refreshToken);
+        String userId = String.valueOf(jwtToken.extractUserId(refreshToken));
         userRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         String newAccessToken = jwtToken.generateAccessToken(userId);
@@ -109,6 +110,11 @@ public class UserService {
         }
 
         return new Token(newAccessToken, newRefreshToken);
+    }
+
+    public UserData getUserData(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new UserData(user.getUsername(), user.getAvatar_url());
     }
 }
 

@@ -7,10 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.*;
 
 @Entity
 @Table(name = "linksy_users")
@@ -18,6 +16,7 @@ import lombok.AllArgsConstructor;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +31,6 @@ public class User {
 
     @NotBlank
     private String password;
-
+    @NotEmpty
     private String avatar_url;
 }

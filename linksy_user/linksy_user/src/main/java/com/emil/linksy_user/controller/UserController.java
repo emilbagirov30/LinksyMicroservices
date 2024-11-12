@@ -6,8 +6,10 @@ import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.exception.UserAlreadyExistsException;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.service.UserService;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -49,6 +51,13 @@ class UserController {
     public ResponseEntity<Token> refreshToken(@RequestParam String refreshToken) {
         Token tokens = userService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(tokens);
+    }
+
+    @GetMapping("/data")
+    public ResponseEntity<UserData> getUserData() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserData userData = userService.getUserData(userId);
+        return ResponseEntity.ok(userData);
     }
 
     @PostMapping("/request_password_change")

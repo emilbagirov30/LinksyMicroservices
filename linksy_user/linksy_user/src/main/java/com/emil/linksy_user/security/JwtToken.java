@@ -34,7 +34,7 @@ public class JwtToken {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
         try {
             Jwts.parser().setSigningKey(jwtSecretAccess).build().parseClaimsJws(token);
             return true;
@@ -42,10 +42,19 @@ public class JwtToken {
             return false;
         }
     }
+    public boolean validateRefreshToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(jwtSecretRefresh).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-    public String extractUserId(String token) {
+
+    public Long extractUserId(String token) {
         Claims claims = Jwts.parser().setSigningKey(jwtSecretAccess).build().parseClaimsJws(token).getBody();
-        return claims.getSubject();
+        return Long.valueOf(claims.getSubject());
     }
 
     public boolean needsRefreshRenewal(String refreshToken) {
