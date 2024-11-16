@@ -12,15 +12,15 @@ import java.util.Date;
 public class JwtToken {
     @Value("${jwt.code.access}") private String jwtSecretAccess;
     @Value("${jwt.code.refresh}") private String jwtSecretRefresh;
-    private final long ACCESS_EXPIRATION_TIME = 1000 * 60 * 15;
-    private final long REFRESH_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 21;
-    private final long REFRESH_RENEWAL_THRESHOLD = 1000L * 60 * 60 * 24;
+    @Value("${jwt.expiration.access}") private long accessExpirationTime;
+    @Value("${jwt.expiration.refresh}") private long refreshExpirationTime;
+    @Value("${jwt.threshold.refresh-renewal}") private long refreshRenewalThreshold;
 
     public String generateAccessToken(String userId) {
         return Jwts.builder()
                 .setSubject(userId)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + accessExpirationTime))
                 .signWith(SignatureAlgorithm.HS512, jwtSecretAccess)
                 .compact();
     }
@@ -29,7 +29,7 @@ public class JwtToken {
         return Jwts.builder()
                 .setSubject(userId)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
                 .signWith(SignatureAlgorithm.HS512, jwtSecretRefresh)
                 .compact();
     }
@@ -61,6 +61,6 @@ public class JwtToken {
         Claims claims = Jwts.parser().setSigningKey(jwtSecretAccess).build().parseClaimsJws(refreshToken).getBody();
         Date expirationDate = claims.getExpiration();
         long timeRemaining = expirationDate.getTime() - System.currentTimeMillis();
-        return timeRemaining <= REFRESH_RENEWAL_THRESHOLD;
+        return timeRemaining <= refreshRenewalThreshold;
     }
 }
