@@ -29,11 +29,9 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.replace("Bearer ", "");
             if (jwtToken.validateAccessToken(token)) {
-                Long userId = jwtToken.extractUserId(token);
-
+                Long userId = jwtToken.extractUserId(token,TokenType.ACCESS);
                 JwtAuthenticationToken authentication = new JwtAuthenticationToken(userId, null, null);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

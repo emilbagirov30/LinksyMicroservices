@@ -52,13 +52,19 @@ public class JwtToken {
     }
 
 
-    public Long extractUserId(String token) {
-        Claims claims = Jwts.parser().setSigningKey(jwtSecretAccess).build().parseClaimsJws(token).getBody();
+    public Long extractUserId(String token,TokenType tokenType) {
+        String signingKey = "";
+        if (tokenType == TokenType.ACCESS){
+            signingKey = jwtSecretAccess;
+        }else if (tokenType == TokenType.REFRESH){
+            signingKey = jwtSecretRefresh;
+        }
+        Claims claims = Jwts.parser().setSigningKey(signingKey).build().parseClaimsJws(token).getBody();
         return Long.valueOf(claims.getSubject());
     }
 
     public boolean needsRefreshRenewal(String refreshToken) {
-        Claims claims = Jwts.parser().setSigningKey(jwtSecretAccess).build().parseClaimsJws(refreshToken).getBody();
+        Claims claims = Jwts.parser().setSigningKey(jwtSecretRefresh).build().parseClaimsJws(refreshToken).getBody();
         Date expirationDate = claims.getExpiration();
         long timeRemaining = expirationDate.getTime() - System.currentTimeMillis();
         return timeRemaining <= refreshRenewalThreshold;

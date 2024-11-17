@@ -10,6 +10,7 @@ import com.emil.linksy_user.model.User;
 import com.emil.linksy_user.model.UserData;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
+import com.emil.linksy_user.security.TokenType;
 import com.emil.linksy_user.util.CodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -99,8 +100,7 @@ public class UserService {
         if (!jwtToken.validateRefreshToken(refreshToken)) {
             throw new InvalidTokenException("Invalid refresh token");
         }
-
-        String userId = String.valueOf(jwtToken.extractUserId(refreshToken));
+        String userId = String.valueOf(jwtToken.extractUserId(refreshToken, TokenType.REFRESH));
         userRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         String newAccessToken = jwtToken.generateAccessToken(userId);
