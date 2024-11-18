@@ -12,5 +12,6 @@ public class AllUserData {
     private String username;
     private String avatarUrl;
     private String email;
+    private String link;
     private Date birthday;
 }

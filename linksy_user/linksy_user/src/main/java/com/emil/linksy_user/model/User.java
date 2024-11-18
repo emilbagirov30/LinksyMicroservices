@@ -33,6 +33,8 @@ public class User {
     @NotEmpty
     private String avatar_url;
 
+    private String link;
+
     @Temporal(TemporalType.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date birthday;

@@ -112,12 +112,12 @@ public class UserService {
 
     public UserProfileData getUserProfileData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new UserProfileData(user.getUsername(), user.getAvatar_url());
+        return new UserProfileData(user.getUsername(),user.getLink(), user.getAvatar_url());
     }
 
     public AllUserData getAllUserData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getBirthday());
+        return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getLink(),user.getBirthday());
     }
 
 
