@@ -4,10 +4,7 @@ import com.emil.linksy_user.exception.InvalidTokenException;
 import com.emil.linksy_user.exception.InvalidVerificationCodeException;
 import com.emil.linksy_user.exception.UserNotFoundException;
 import com.emil.linksy_user.exception.UserAlreadyExistsException;
-import com.emil.linksy_user.model.EmailRequest;
-import com.emil.linksy_user.model.Token;
-import com.emil.linksy_user.model.User;
-import com.emil.linksy_user.model.UserData;
+import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
@@ -16,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,9 +110,22 @@ public class UserService {
         return new Token(newAccessToken, newRefreshToken);
     }
 
-    public UserData getUserData(Long userId) {
+    public UserProfileData getUserProfileData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new UserData(user.getUsername(), user.getAvatar_url());
+        return new UserProfileData(user.getUsername(), user.getAvatar_url());
     }
+
+    public AllUserData getAllUserData(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getBirthday());
+    }
+
+
+
+
+
+
+
+
 }
 

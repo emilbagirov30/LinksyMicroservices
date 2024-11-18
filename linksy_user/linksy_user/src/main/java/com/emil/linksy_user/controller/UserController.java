@@ -6,7 +6,6 @@ import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.exception.UserAlreadyExistsException;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.service.UserService;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -53,11 +52,17 @@ class UserController {
         return ResponseEntity.ok(tokens);
     }
 
-    @GetMapping("/data")
-    public ResponseEntity<UserData> getUserData() {
+    @GetMapping("/profile_data")
+    public ResponseEntity<UserProfileData> getUserProfileData() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UserData userData = userService.getUserData(userId);
-        return ResponseEntity.ok(userData);
+        UserProfileData userProfileData = userService.getUserProfileData(userId);
+        return ResponseEntity.ok(userProfileData);
+    }
+    @GetMapping("/all_data")
+    public ResponseEntity<AllUserData> getAllUserData() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        AllUserData allUserData = userService.getAllUserData(userId);
+        return ResponseEntity.ok(allUserData);
     }
 
     @PostMapping("/request_password_change")
@@ -71,6 +76,7 @@ class UserController {
         userService.confirmPasswordChange(changePassword.getEmail(), changePassword.getCode(), changePassword.getNewPassword());
         return ResponseEntity.ok().build();
     }
+
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(UserNotFoundException ex) {
