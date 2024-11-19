@@ -6,6 +6,7 @@ import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
 import com.emil.linksy_user.util.CodeGenerator;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class UserService {
     private final Map<String, User> pendingUsers = new HashMap<>();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtToken jwtToken;
+    private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
@@ -122,43 +125,61 @@ public class UserService {
         return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getLink(),birthday);
     }
 
-    public void uploadAvatar (Long userId,String avatarUrl){
-         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-         user.setAvatar_url(avatarUrl);
-         userRepository.save(user);
-     }
 
-     public void updateUsername (Long userId,String newUsername){
-         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-         user.setUsername(newUsername);
-         userRepository.save(user);
-     }
+    public void uploadAvatar(Long userId, String avatarUrl) {
+        synchronized (getUserLock(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            user.setAvatar_url(avatarUrl);
+            userRepository.save(user);
+        }
+    }
+
+    public void updateUsername(Long userId, String newUsername) {
+        synchronized (getUserLock(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            user.setUsername(newUsername);
+            userRepository.save(user);
+        }
+    }
 
     public void updateLink(Long userId, String link) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-        if (userRepository.existsByLinkAndIdNot(link, userId)) {
-            throw new LinkAlreadyExistsException("Link is already in use by another user");
+        synchronized (getUserLock(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            if (userRepository.existsByLinkAndIdNot(link, userId)) {
+                throw new LinkAlreadyExistsException("Link is already in use by another user");
+            }
+            user.setLink(link);
+            userRepository.save(user);
         }
-        user.setLink(link);
-        userRepository.save(user);
     }
 
-    public void updateBirthday (Long userId, String birthday) throws ParseException {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-        Date newBirthday = dateFormat.parse(birthday);
-        user.setBirthday(newBirthday);
-        userRepository.save(user);
+    public void updateBirthday(Long userId, String birthday) throws ParseException {
+        synchronized (getUserLock(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+            Date newBirthday = dateFormat.parse(birthday);
+            user.setBirthday(newBirthday);
+            userRepository.save(user);
+        }
     }
 
-    public void deleteAvatar (Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        user.setAvatar_url("null");
-        userRepository.save(user);
+    public void deleteAvatar(Long userId) {
+        synchronized (getUserLock(userId)) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            user.setAvatar_url("null");
+            userRepository.save(user);
+        }
     }
 
-
+    private Object getUserLock(Long userId) {
+        userLocks.putIfAbsent(userId, new Object());
+        return userLocks.get(userId);
+    }
 
 
 }
