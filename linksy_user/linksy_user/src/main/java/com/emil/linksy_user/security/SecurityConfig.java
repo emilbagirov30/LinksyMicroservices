@@ -26,8 +26,11 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .requestMatchers("/api/users/profile_data").authenticated()
                 .requestMatchers("/api/users/all_data").authenticated()
+                .requestMatchers("/api/users/delete_avatar").authenticated()
                 .requestMatchers("/api/users//update_birthday").authenticated()
-                .requestMatchers(" /api/users/upload/avatar").authenticated()
+                .requestMatchers("/api/users//update_link").authenticated()
+                .requestMatchers("/api/users//update_username").authenticated()
+                .requestMatchers("/api/users/upload/avatar").authenticated()
                 .anyRequest().permitAll()
                 .and()
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

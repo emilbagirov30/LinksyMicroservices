@@ -1,9 +1,6 @@
 package com.emil.linksy_user.service;
 
-import com.emil.linksy_user.exception.InvalidTokenException;
-import com.emil.linksy_user.exception.InvalidVerificationCodeException;
-import com.emil.linksy_user.exception.UserNotFoundException;
-import com.emil.linksy_user.exception.UserAlreadyExistsException;
+import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
@@ -137,6 +134,16 @@ public class UserService {
          userRepository.save(user);
      }
 
+    public void updateLink(Long userId, String link) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        if (userRepository.existsByLinkAndIdNot(link, userId)) {
+            throw new LinkAlreadyExistsException("Link is already in use by another user");
+        }
+        user.setLink(link);
+        userRepository.save(user);
+    }
+
     public void updateBirthday (Long userId, String birthday) throws ParseException {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
@@ -145,6 +152,11 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void deleteAvatar (Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.setAvatar_url("null");
+        userRepository.save(user);
+    }
 
 
 

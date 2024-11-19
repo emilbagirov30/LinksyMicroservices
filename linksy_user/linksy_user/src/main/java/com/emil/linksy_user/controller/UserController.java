@@ -1,9 +1,6 @@
 package com.emil.linksy_user.controller;
-import com.emil.linksy_user.exception.InvalidTokenException;
-import com.emil.linksy_user.exception.InvalidVerificationCodeException;
-import com.emil.linksy_user.exception.UserNotFoundException;
+import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
-import com.emil.linksy_user.exception.UserAlreadyExistsException;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -84,10 +81,33 @@ class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/update_username")
+    public ResponseEntity<Void> updateUsername(@RequestParam String username) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.updateUsername(userId,username);
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/update_link")
+    public ResponseEntity<Void> updateLink(@RequestParam String link) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.updateLink(userId,link);
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/delete_avatar")
+    public ResponseEntity<Void> deleteAvatar() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.deleteAvatar(userId);
+        return ResponseEntity.ok().build();
+    }
+
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+    }
+    @ExceptionHandler(LinkAlreadyExistsException.class)
+    public ResponseEntity<Void> handleLinkAlreadyExist(LinkAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
     }
     @ExceptionHandler(InvalidVerificationCodeException.class)
     public ResponseEntity<Void> handleInvalidVerificationCode(InvalidVerificationCodeException ex) {
