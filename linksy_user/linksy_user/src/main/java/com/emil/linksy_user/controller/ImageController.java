@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/users/upload")
@@ -25,10 +24,8 @@ public class ImageController {
     }
     @Value("${image.upload-dir}")
     private String uploadDir;
-
     @Value("${app.domain}")
     private String domain;
-
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

@@ -1,9 +1,9 @@
 package com.emil.linksy_user.model;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.Date;
 
 @AllArgsConstructor
 @Getter
@@ -13,5 +13,6 @@ public class AllUserData {
     private String avatarUrl;
     private String email;
     private String link;
-    private Date birthday;
+    private String birthday;
+
 }

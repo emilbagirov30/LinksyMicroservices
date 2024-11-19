@@ -14,6 +14,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -117,15 +120,30 @@ public class UserService {
 
     public AllUserData getAllUserData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getLink(),user.getBirthday());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        String birthday = dateFormat.format(user.getBirthday());
+        return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getLink(),birthday);
     }
 
-     public void uploadAvatar (Long userId,String avatarUrl){
+    public void uploadAvatar (Long userId,String avatarUrl){
          User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
          user.setAvatar_url(avatarUrl);
          userRepository.save(user);
      }
 
+     public void updateUsername (Long userId,String newUsername){
+         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+         user.setUsername(newUsername);
+         userRepository.save(user);
+     }
+
+    public void updateBirthday (Long userId, String birthday) throws ParseException {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        Date newBirthday = dateFormat.parse(birthday);
+        user.setBirthday(newBirthday);
+        userRepository.save(user);
+    }
 
 
 

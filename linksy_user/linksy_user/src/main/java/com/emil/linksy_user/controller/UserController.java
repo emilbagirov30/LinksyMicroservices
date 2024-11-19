@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+
 @RestController
 @RequestMapping("/api/users")
 class UserController {
@@ -73,6 +75,12 @@ class UserController {
     @PostMapping("/confirm_password_change")
     public ResponseEntity<Void> confirmPasswordChange(@RequestBody ChangePassword changePassword) {
         userService.confirmPasswordChange(changePassword.getEmail(), changePassword.getCode(), changePassword.getNewPassword());
+        return ResponseEntity.ok().build();
+    }
+    @PostMapping("/update_birthday")
+    public ResponseEntity<Void> updateBirthday(@RequestParam String birthday) throws ParseException {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.updateBirthday(userId,birthday);
         return ResponseEntity.ok().build();
     }
 
