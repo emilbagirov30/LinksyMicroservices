@@ -32,7 +32,7 @@ public class User {
     private String password;
     @NotEmpty
     private String avatar_url;
-
+    @NotBlank
     private String link;
 
     @Temporal(TemporalType.DATE)

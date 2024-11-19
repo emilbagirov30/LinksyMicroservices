@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 class UserController {
     private final UserService userService;
-    private final JwtToken jwtToken;
-    public UserController(UserService userService, JwtToken jwtToken) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.jwtToken = jwtToken;
+
     }
 
     @PostMapping("/register")
@@ -53,7 +52,7 @@ class UserController {
     }
 
     @GetMapping("/profile_data")
-    public ResponseEntity<UserProfileData> getUserProfileData() {
+    public ResponseEntity<UserProfileData> getUserProfileData() throws InterruptedException {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserProfileData userProfileData = userService.getUserProfileData(userId);
         return ResponseEntity.ok(userProfileData);

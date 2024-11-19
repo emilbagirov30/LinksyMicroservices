@@ -120,7 +120,11 @@ public class UserService {
         return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getLink(),user.getBirthday());
     }
 
-
+     public void uploadAvatar (Long userId,String avatarUrl){
+         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+         user.setAvatar_url(avatarUrl);
+         userRepository.save(user);
+     }
 
 
 
