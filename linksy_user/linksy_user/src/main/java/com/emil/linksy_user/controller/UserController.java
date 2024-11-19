@@ -1,7 +1,6 @@
 package com.emil.linksy_user.controller;
 import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
-import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -70,8 +69,8 @@ class UserController {
     }
 
     @PostMapping("/confirm_password_change")
-    public ResponseEntity<Void> confirmPasswordChange(@RequestBody ChangePassword changePassword) {
-        userService.confirmPasswordChange(changePassword.getEmail(), changePassword.getCode(), changePassword.getNewPassword());
+    public ResponseEntity<Void> confirmPasswordChange(@RequestBody RecoveryPassword recoveryPassword) {
+        userService.confirmPasswordChange(recoveryPassword.getEmail(), recoveryPassword.getCode(), recoveryPassword.getNewPassword());
         return ResponseEntity.ok().build();
     }
     @PostMapping("/update_birthday")
@@ -97,6 +96,13 @@ class UserController {
     public ResponseEntity<Void> deleteAvatar() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.deleteAvatar(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/change_password")
+    public ResponseEntity<Void> changePassword(@RequestBody ChangePassword changePassword) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.changePassword(userId,changePassword);
         return ResponseEntity.ok().build();
     }
 

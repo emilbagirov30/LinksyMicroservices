@@ -175,6 +175,16 @@ public class UserService {
             userRepository.save(user);
         }
     }
+    public void changePassword(Long userId, ChangePassword changePassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        Boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
+        if(correctPassword) {
+            user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
+            userRepository.save(user);
+        }else throw new UserNotFoundException("Invalid password");
+
+    }
 
     private Object getUserLock(Long userId) {
         userLocks.putIfAbsent(userId, new Object());
