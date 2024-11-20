@@ -6,7 +6,6 @@ import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
 import com.emil.linksy_user.util.CodeGenerator;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -36,7 +35,7 @@ public class UserService {
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setAvatar_url("null");
+        user.setAvatarUrl("null");
         pendingUsers.put(email, user);
         sendCodeToConfirmTheMail(email);
     }
@@ -115,14 +114,14 @@ public class UserService {
 
     public UserProfileData getUserProfileData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new UserProfileData(user.getUsername(),user.getLink(), user.getAvatar_url());
+        return new UserProfileData(user.getUsername(),user.getLink(), user.getAvatarUrl());
     }
 
     public AllUserData getAllUserData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         String birthday = dateFormat.format(user.getBirthday());
-        return new AllUserData(user.getUsername(), user.getAvatar_url(),user.getEmail(),user.getLink(),birthday);
+        return new AllUserData(user.getUsername(), user.getAvatarUrl(),user.getEmail(),user.getLink(),birthday);
     }
 
 
@@ -130,7 +129,7 @@ public class UserService {
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
-            user.setAvatar_url(avatarUrl);
+            user.setAvatarUrl(avatarUrl);
             userRepository.save(user);
         }
     }
@@ -171,7 +170,7 @@ public class UserService {
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
-            user.setAvatar_url("null");
+            user.setAvatarUrl("null");
             userRepository.save(user);
         }
     }

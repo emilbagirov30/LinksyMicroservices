@@ -31,7 +31,8 @@ public class User {
     @NotBlank
     private String password;
     @NotEmpty
-    private String avatar_url;
+    @Column(name = "avatar_url")
+    private String avatarUrl;
     @NotBlank
     private String link;
 
