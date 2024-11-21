@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "linksy_users")
@@ -28,6 +29,8 @@ public class User {
     @NotBlank
     private String username;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts;
     @NotBlank
     private String password;
     @NotEmpty

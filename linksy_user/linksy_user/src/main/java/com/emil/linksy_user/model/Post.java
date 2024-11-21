@@ -15,24 +15,21 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Posts {
+public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
+
     @NotNull
-    private Long author_id;
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private User user;
 
     private String text;
-    @NotNull
-    @NotBlank
     private int rating;
-    @NotNull
-    @NotBlank
     private int reposts;
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "publication_time", nullable = false)
-    @NotNull
-    private Date publication_time;
+    @Column(name = "publication_time",nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private Date publicationTime;
 }

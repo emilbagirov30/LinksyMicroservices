@@ -27,6 +27,9 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtToken jwtToken;
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
+
+
+
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");

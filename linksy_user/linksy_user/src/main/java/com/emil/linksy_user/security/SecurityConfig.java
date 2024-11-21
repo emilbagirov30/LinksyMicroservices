@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/profile_data").authenticated()
                 .requestMatchers("/api/users/all_data").authenticated()
                 .requestMatchers("/api/users/delete_avatar").authenticated()
+                .requestMatchers("/api/posts/create").authenticated()
                 .requestMatchers("/api/users/change_password").authenticated()
                 .requestMatchers("/api/users//update_birthday").authenticated()
                 .requestMatchers("/api/users//update_link").authenticated()
