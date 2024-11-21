@@ -1,6 +1,7 @@
 package com.emil.linksy_user.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,17 +20,16 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-
     @NotNull
     @ManyToOne
     @JoinColumn(name = "author_id")
     private User user;
 
     private String text;
-    private int rating;
     private int reposts;
+    private int likes;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "publication_time",nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
     private Date publicationTime;
 }

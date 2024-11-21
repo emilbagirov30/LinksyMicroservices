@@ -14,5 +14,4 @@ public class AllUserData {
     private String email;
     private String link;
     private String birthday;
-
 }
