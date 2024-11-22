@@ -39,10 +39,10 @@ public class PostService {
         List<Post> posts = postRepository.findByUser(user);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-
         return posts.stream()
                 .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
                 .map(post -> new PostResponse(
+                        post.getId(),
                         user.getUsername(),
                         user.getAvatarUrl(),
                         post.getText(),
@@ -53,6 +53,17 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+public void deletePost (Long userId,long postId) {
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+    Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
+    if (!post.getUser().getId().equals(user.getId())) {
+        throw new SecurityException("User does not own the post");
+    }
+
+    postRepository.delete(post);
+}
 
 }

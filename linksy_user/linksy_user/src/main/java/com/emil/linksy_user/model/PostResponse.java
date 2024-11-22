@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostResponse {
+    private Long postId;
     private String authorUsername;
     private String authorAvatarUrl;
     private String text;

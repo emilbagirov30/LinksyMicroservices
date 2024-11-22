@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/users//update_username").authenticated()
                 .requestMatchers("/api/users/upload/avatar").authenticated()
                 .requestMatchers("/api/posts/user_posts").authenticated()
+                .requestMatchers("/api/posts/delete_post").authenticated()
                 .anyRequest().permitAll()
                 .and()
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
