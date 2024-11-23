@@ -43,7 +43,7 @@ class UserController {
         return ResponseEntity.ok(tokens);
     }
 
-    @PostMapping("/refresh_token")
+    @PatchMapping("/refresh_token")
     public ResponseEntity<Token> refreshToken(@RequestParam String refreshToken) {
         Token tokens = userService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(tokens);
@@ -73,33 +73,33 @@ class UserController {
         userService.confirmPasswordChange(recoveryPassword.getEmail(), recoveryPassword.getCode(), recoveryPassword.getNewPassword());
         return ResponseEntity.ok().build();
     }
-    @PostMapping("/update_birthday")
+    @PatchMapping("/update_birthday")
     public ResponseEntity<Void> updateBirthday(@RequestParam String birthday) throws ParseException {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.updateBirthday(userId,birthday);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/update_username")
+    @PatchMapping("/update_username")
     public ResponseEntity<Void> updateUsername(@RequestParam String username) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.updateUsername(userId,username);
         return ResponseEntity.ok().build();
     }
-    @PostMapping("/update_link")
+    @PatchMapping("/update_link")
     public ResponseEntity<Void> updateLink(@RequestParam String link) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.updateLink(userId,link);
         return ResponseEntity.ok().build();
     }
-    @PostMapping("/delete_avatar")
+    @DeleteMapping("/delete_avatar")
     public ResponseEntity<Void> deleteAvatar() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.deleteAvatar(userId);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/change_password")
+    @PatchMapping("/change_password")
     public ResponseEntity<Void> changePassword(@RequestBody ChangePassword changePassword) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.changePassword(userId,changePassword);

@@ -24,6 +24,7 @@ public class PostController {
         return ResponseEntity.ok().build();
     }
 
+
 @DeleteMapping("/delete_post")
 public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
     Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
