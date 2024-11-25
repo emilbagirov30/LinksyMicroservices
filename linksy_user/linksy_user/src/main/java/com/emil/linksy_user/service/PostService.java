@@ -58,7 +58,6 @@ public void deletePost (Long userId,long postId) {
             .orElseThrow(() -> new UserNotFoundException("User not found"));
     Post post = postRepository.findById(postId)
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-
     if (!post.getUser().getId().equals(user.getId())) {
         throw new SecurityException("User does not own the post");
     }

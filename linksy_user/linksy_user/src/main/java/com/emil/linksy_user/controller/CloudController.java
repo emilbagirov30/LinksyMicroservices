@@ -16,10 +16,10 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users/upload")
-public class ImageController {
+public class CloudController {
     private final UserService userService;
 
-    public ImageController(UserService userService) {
+    public CloudController(UserService userService) {
         this.userService = userService;
     }
     @Value("${image.upload-dir}")
