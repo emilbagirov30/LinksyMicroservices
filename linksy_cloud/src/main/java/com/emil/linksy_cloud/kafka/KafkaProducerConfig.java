@@ -1,7 +1,8 @@
-package com.emil.linksy_user.kafka;
+package com.emil.linksy_cloud.kafka;
 
-import com.emil.linksy_user.model.AvatarRequest;
-import com.emil.linksy_user.model.EmailRequest;
+
+
+import com.emil.linksy_cloud.model.AvatarResponse;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -27,22 +28,12 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, EmailRequest> producerEmailFactory() {
+    public ProducerFactory<String, AvatarResponse> producerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
     @Bean
-    public KafkaTemplate<String, EmailRequest> kafkaEmailTemplate() {
-        return new KafkaTemplate<>(producerEmailFactory());
-    }
-
-    @Bean
-    public ProducerFactory<String, AvatarRequest> producerAvatarFactory() {
-        return new DefaultKafkaProducerFactory<>(producerConfig());
-    }
-
-    @Bean
-    public KafkaTemplate<String, AvatarRequest> kafkaAvatarTemplate() {
-        return new KafkaTemplate<>(producerAvatarFactory());
+    public KafkaTemplate<String, AvatarResponse> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
     }
 }

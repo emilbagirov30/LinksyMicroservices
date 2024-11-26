@@ -1,6 +1,7 @@
 package com.emil.linksy_user.controller;
 
 import com.emil.linksy_user.exception.UserNotFoundException;
+import com.emil.linksy_user.service.MediaService;
 import com.emil.linksy_user.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,31 +14,31 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/users/upload")
 public class CloudController {
-    private final UserService userService;
+    private final MediaService mediaService;
 
-    public CloudController(UserService userService) {
-        this.userService = userService;
+    public CloudController(MediaService mediaService) {
+        this.mediaService = mediaService;
     }
-    @Value("${image.upload-dir}")
-    private String uploadDir;
-    @Value("${app.domain}")
-    private String domain;
+
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String uniqueFileName = UUID.randomUUID() + ".png";
-
-        File imageFile = new File(uploadDir, uniqueFileName);
-        try (FileOutputStream fos = new FileOutputStream(imageFile)) {
-            fos.write(file.getBytes());
+         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+         CompletableFuture<Boolean> future = mediaService.requestAvatarUpload(userId, file);
+         try {
+            boolean success = future.get();
+            if (success) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        String avatarUrl = domain + uploadDir + uniqueFileName;
-        userService.uploadAvatar(userId,avatarUrl);
-        return ResponseEntity.ok().build();
     }
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(UserNotFoundException ex) {

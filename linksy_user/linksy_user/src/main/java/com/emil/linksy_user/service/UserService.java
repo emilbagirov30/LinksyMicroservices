@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final KafkaTemplate<String, EmailRequest> kafkaTemplate;
+    private final KafkaTemplate<String, EmailRequest> kafkaEmailTemplate;
     private final Map<String, User> pendingUsers = new HashMap<>();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtToken jwtToken;
@@ -49,11 +49,11 @@ public class UserService {
     }
 
     public void sendCodeToConfirmTheMail(String email) {
-        kafkaTemplate.send("emails", getEmailRequest(email, "Your email verification code: "));
+        kafkaEmailTemplate.send("emails", getEmailRequest(email, "Your email verification code: "));
     }
 
     public void sendCodeToConfirmThePasswordChange(String email) {
-        kafkaTemplate.send("emails", getEmailRequest(email, "Your password change code: "));
+        kafkaEmailTemplate.send("emails", getEmailRequest(email, "Your password change code: "));
     }
 
     public void confirmCode(String email, String code) {
@@ -123,12 +123,16 @@ public class UserService {
     public AllUserData getAllUserData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-        String birthday = dateFormat.format(user.getBirthday());
+        String birthday = null;
+        if (user.getBirthday()!=null)
+          birthday = dateFormat.format(user.getBirthday());
         return new AllUserData(user.getUsername(), user.getAvatarUrl(),user.getEmail(),user.getLink(),birthday);
     }
 
 
-    public void uploadAvatar(Long userId, String avatarUrl) {
+    public void saveUserAvatar (AvatarResponse response) {
+        Long userId = response.getUserId();
+        String avatarUrl = response.getAvatarUrl();
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -180,7 +184,7 @@ public class UserService {
     public void changePassword(Long userId, ChangePassword changePassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        Boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
+        boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
         if(correctPassword) {
             user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
             userRepository.save(user);

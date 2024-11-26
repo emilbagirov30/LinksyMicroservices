@@ -1,4 +1,4 @@
-package com.emil.linksy_user.security;
+package com.emil.linksy_cloud.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/avatar/**")
+        registry.addResourceHandler("/" + uploadDir + "**")
                 .addResourceLocations("file:" + uploadDir + "/");
     }
 }
