@@ -4,6 +4,7 @@ import com.emil.linksy_user.model.AvatarRequest;
 import com.emil.linksy_user.model.EmailRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -16,13 +17,18 @@ import java.util.Map;
 
 @Configuration
 public class KafkaProducerConfig {
-
+    @Value("${app.kafka.producer.max-request-size}")
+    private int maxRequestSize;
+    @Value("${app.kafka.producer.compression-type}")
+    private String compressionType;
     private Map<String, Object> producerConfig() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         config.put(ProducerConfig.ACKS_CONFIG, "all");
+        config.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, maxRequestSize);
+        config.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, compressionType);
         return config;
     }
 
