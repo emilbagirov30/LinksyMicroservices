@@ -1,6 +1,6 @@
 package com.emil.linksy_user.kafka;
 
-import com.emil.linksy_user.model.AvatarRequest;
+import com.emil.linksy_user.model.MediaRequest;
 import com.emil.linksy_user.model.EmailRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -43,12 +43,12 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, AvatarRequest> producerAvatarFactory() {
+    public ProducerFactory<String, MediaRequest> producerAvatarFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
     @Bean
-    public KafkaTemplate<String, AvatarRequest> kafkaAvatarTemplate() {
+    public KafkaTemplate<String, MediaRequest> kafkaAvatarTemplate() {
         return new KafkaTemplate<>(producerAvatarFactory());
     }
 }

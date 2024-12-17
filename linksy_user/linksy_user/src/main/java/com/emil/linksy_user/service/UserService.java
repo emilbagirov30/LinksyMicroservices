@@ -130,9 +130,9 @@ public class UserService {
     }
 
 
-    public void saveUserAvatar (AvatarResponse response) {
-        Long userId = response.getUserId();
-        String avatarUrl = response.getAvatarUrl();
+    public void saveUserAvatar (MediaResponse response) {
+        Long userId = response.getId();
+        String avatarUrl = response.getUrl();
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));

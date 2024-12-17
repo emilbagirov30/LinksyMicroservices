@@ -11,6 +11,10 @@ public class PostResponse {
     private Long postId;
     private String authorUsername;
     private String authorAvatarUrl;
+    private String imageUrl;
+    private String videoUrl;
+    private String audioUrl;
+    private String voiceUrl;
     private String text;
     private String publishDate;
     private int likesCount;

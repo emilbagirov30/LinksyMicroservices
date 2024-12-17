@@ -1,6 +1,6 @@
 package com.emil.linksy_cloud.kafka;
 
-import com.emil.linksy_cloud.model.AvatarRequest;
+import com.emil.linksy_cloud.model.MediaRequest;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, AvatarRequest> consumerFactory() {
+    public ConsumerFactory<String, MediaRequest> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         config.put(ConsumerConfig.GROUP_ID_CONFIG, "group_id");
@@ -28,13 +28,13 @@ public class KafkaConsumerConfig {
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(),
-                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(AvatarRequest.class, false)));
+                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(MediaRequest.class, false)));
     }
 
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String,AvatarRequest> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, AvatarRequest> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, MediaRequest> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, MediaRequest> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }

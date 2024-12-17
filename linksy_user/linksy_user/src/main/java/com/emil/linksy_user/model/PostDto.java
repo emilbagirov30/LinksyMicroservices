@@ -3,6 +3,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -10,4 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PostDto {
     private String text;
+    private MultipartFile image;
+    private MultipartFile video;
+    private MultipartFile audio;
+    private MultipartFile voice;
 }

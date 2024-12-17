@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AvatarRequest {
-    private Long userId;
+public class MediaRequest {
+    private Long id;
     private byte[] fileBytes;
 }

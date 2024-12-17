@@ -17,7 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/api/users/upload")
+@RequestMapping("/api/upload")
 public class CloudController {
     private final MediaService mediaService;
 
@@ -26,9 +26,9 @@ public class CloudController {
     }
 
     @PostMapping("/avatar")
-    public ResponseEntity<Void> uploadAvatar(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<Void> uploadAvatar(@RequestParam(value = "image") MultipartFile avatar)  {
          Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-         CompletableFuture<Boolean> future = mediaService.requestAvatarUpload(userId, file);
+         CompletableFuture<Boolean> future = mediaService.requestAvatarUpload(userId, avatar);
          try {
             boolean success = future.get();
             if (success) {

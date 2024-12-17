@@ -2,7 +2,7 @@ package com.emil.linksy_cloud.kafka;
 
 
 
-import com.emil.linksy_cloud.model.AvatarResponse;
+import com.emil.linksy_cloud.model.MediaResponse;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -28,12 +28,12 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, AvatarResponse> producerFactory() {
+    public ProducerFactory<String, MediaResponse> producerFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
     @Bean
-    public KafkaTemplate<String, AvatarResponse> kafkaTemplate() {
+    public KafkaTemplate<String, MediaResponse> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

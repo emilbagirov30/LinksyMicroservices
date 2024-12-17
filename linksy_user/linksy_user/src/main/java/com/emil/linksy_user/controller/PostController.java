@@ -6,7 +6,7 @@ import com.emil.linksy_user.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
@@ -18,12 +18,15 @@ public class PostController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Void> createPost(@RequestBody PostDto post) {
+    public ResponseEntity<Void> createPost(  @RequestParam("text") String text,
+                                             @RequestParam(value = "image", required = false) MultipartFile image,
+                                             @RequestParam(value = "video", required = false) MultipartFile video,
+                                             @RequestParam(value = "audio", required = false) MultipartFile audio,
+                                             @RequestParam(value = "voice", required = false) MultipartFile voice) {
         Long authorId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        postService.createPost(authorId,post);
+        postService.createPost(authorId,new PostDto(text,image,video,audio,voice));
         return ResponseEntity.ok().build();
     }
-
 
 @DeleteMapping("/delete_post")
 public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
