@@ -1,7 +1,7 @@
 package com.emil.linksy_cloud.service;
 
+import com.emil.linksy_cloud.model.PostKafkaResponse;
 import com.emil.linksy_cloud.util.Topic;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import com.emil.linksy_cloud.model.MediaRequest;
 import com.emil.linksy_cloud.model.MediaResponse;
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,36 +30,43 @@ public class MediaService {
     private String uploadVoiceDir;
     @Value("${app.domain}")
     private String domain;
-    private final KafkaTemplate<String, MediaResponse> kafkaTemplate;
+    private final KafkaTemplate<String, MediaResponse> kafkaMediaTemplate;
+    private final KafkaTemplate<String, PostKafkaResponse> kafkaPostTemplate;
+
+    public void consumeAvatar(Long id, MultipartFile file) {
+         byte[] fileBytes = getFileBytes(file);
+         String avatarUrl = uploadResources(fileBytes,uploadImageDir,".png");
+         sendResponse(new MediaResponse(id,avatarUrl),Topic.AVATAR_RESPONSE);
+    }
 
 
-    @KafkaListener(topics = "avatarRequest", groupId = "group_id")
-    public void consumeAvatar(MediaRequest mediaRequest) {
-         String avatarUrl = uploadResources(mediaRequest.getFileBytes(),uploadImageDir,".png");
-         sendResponse(new MediaResponse(mediaRequest.getId(),avatarUrl),Topic.AVATAR_RESPONSE);
-    }
-    @KafkaListener(topics = "imageRequest", groupId = "group_id")
-    public void consumeImage(MediaRequest mediaRequest) {
-        String imageUrl = uploadResources(mediaRequest.getFileBytes(),uploadImageDir,".png");
-        sendResponse(new MediaResponse(mediaRequest.getId(), imageUrl),Topic.IMAGE_POST_RESPONSE);
-    }
-    @KafkaListener(topics = "videoRequest", groupId = "group_id")
-    public void consumeVideo(MediaRequest mediaRequest) {
-        String videoUrl = uploadResources(mediaRequest.getFileBytes(),uploadVideoDir,".mp4");
-        sendResponse(new MediaResponse(mediaRequest.getId(), videoUrl),Topic.VIDEO_POST_RESPONSE);
-    }
+    public void consumePost(Long id, String text, MultipartFile image, MultipartFile video,
+                            MultipartFile audio,MultipartFile voice) {
+        String textPost = text.substring(1, text.length() - 1);
+        if (textPost.isEmpty()) textPost=null;
+        String imageUrl = null;
+        String videoUrl= null;
+        String audioUrl= null;
+        String voiceUrl= null;
 
-    @KafkaListener(topics = "audioRequest", groupId = "group_id")
-    public void consumeAudio(MediaRequest mediaRequest) {
-        String audioUrl = uploadResources(mediaRequest.getFileBytes(),uploadAudioDir,".mp3");
-        sendResponse(new MediaResponse(mediaRequest.getId(),audioUrl),Topic.AUDIO_POST_RESPONSE);
+        if (image!=null) {
+            byte[] imageBytes = getFileBytes(image);
+            imageUrl = uploadResources(imageBytes,uploadImageDir,".png");
+        }
+        if (video!=null) {
+            byte[] videoBytes = getFileBytes(video);
+            videoUrl = uploadResources(videoBytes,uploadVideoDir,".mp4");
+        }
+        if (audio!=null){
+            byte[] audioBytes = getFileBytes(audio);
+            audioUrl = uploadResources(audioBytes,uploadAudioDir,".mp3");
+        }
+        if (voice!=null){
+            byte[] voiceBytes = getFileBytes(voice);
+            voiceUrl = uploadResources(voiceBytes,uploadVoiceDir,".mp3");
+        }
+        sendPostResponse(new PostKafkaResponse(id,textPost,imageUrl,videoUrl,audioUrl,voiceUrl));
     }
-    @KafkaListener(topics = "voiceRequest", groupId = "group_id")
-    public void consumeVoice(MediaRequest mediaRequest) {
-        String voiceUrl = uploadResources(mediaRequest.getFileBytes(),uploadVoiceDir,".mp3");
-        sendResponse(new MediaResponse(mediaRequest.getId(), voiceUrl),Topic.VOICE_POST_RESPONSE);
-    }
-
 
     public String uploadResources( byte[] fileBytes,String dir,String ext)  {
         String uniqueFileName = UUID.randomUUID().toString() + UUID.randomUUID().toString() + "_" + System.currentTimeMillis() + ext;
@@ -78,7 +86,19 @@ public class MediaService {
 
 
     public void sendResponse (MediaResponse response, Topic topic){
-         kafkaTemplate.send(topic.getTopic(),response);
+         kafkaMediaTemplate.send(topic.getTopic(),response);
     }
 
+    public void sendPostResponse (PostKafkaResponse response){
+        kafkaPostTemplate.send("postResponse",response);
+    }
+
+private byte [] getFileBytes (MultipartFile file){
+    byte[] fileBytes = null;
+    try {
+       return fileBytes = file.getBytes();
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+}
 }

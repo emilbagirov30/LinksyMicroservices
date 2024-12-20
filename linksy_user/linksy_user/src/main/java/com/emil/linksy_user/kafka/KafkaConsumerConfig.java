@@ -1,6 +1,7 @@
 package com.emil.linksy_user.kafka;
 
 import com.emil.linksy_user.model.MediaResponse;
+import com.emil.linksy_user.model.PostKafkaResponse;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,24 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, MediaResponse> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, MediaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        return factory;
+    }
+    @Bean
+    public ConsumerFactory<String, PostKafkaResponse> postKafkaResponseConsumerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "group_id_post");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(),
+                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(PostKafkaResponse.class, false)));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PostKafkaResponse> postKafkaResponseKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PostKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(postKafkaResponseConsumerFactory());
         return factory;
     }
 }

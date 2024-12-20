@@ -5,10 +5,11 @@ import lombok.Getter;
 @Getter
 public enum Topic {
     AVATAR_RESPONSE("avatarResponse"),
-    IMAGE_POST_RESPONSE("imageResponse"),
-    AUDIO_POST_RESPONSE("audioResponse"),
-    VIDEO_POST_RESPONSE("videoResponse"),
-    VOICE_POST_RESPONSE("voiceResponse");
+    IMAGE_POST_RESPONSE("imagePostResponse"),
+    AUDIO_POST_RESPONSE("audioPostResponse"),
+    VIDEO_POST_RESPONSE("videoPostResponse"),
+    VOICE_POST_RESPONSE("voicePostResponse"),
+    POST_RESPONSE("postResponse");
     private final String topic;
 
     Topic(String topic) {

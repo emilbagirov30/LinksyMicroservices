@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum Topic {
-    IMAGE_POST_REQUEST("imageRequest"),
-    AUDIO_POST_REQUEST("audioRequest"),
-    VIDEO_POST_REQUEST("videoRequest"),
-    VOICE_POST_REQUEST("voiceRequest");
+    IMAGE_POST_REQUEST("imagePostRequest"),
+    AUDIO_POST_REQUEST("audioPostRequest"),
+    VIDEO_POST_REQUEST("videoPostRequest"),
+    VOICE_POST_REQUEST("voicePostRequest");
 
     private final String topic;
 

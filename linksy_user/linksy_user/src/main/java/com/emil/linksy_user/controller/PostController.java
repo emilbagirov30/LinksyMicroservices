@@ -17,17 +17,6 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Void> createPost(  @RequestParam("text") String text,
-                                             @RequestParam(value = "image", required = false) MultipartFile image,
-                                             @RequestParam(value = "video", required = false) MultipartFile video,
-                                             @RequestParam(value = "audio", required = false) MultipartFile audio,
-                                             @RequestParam(value = "voice", required = false) MultipartFile voice) {
-        Long authorId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        postService.createPost(authorId,new PostDto(text,image,video,audio,voice));
-        return ResponseEntity.ok().build();
-    }
-
 @DeleteMapping("/delete_post")
 public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
     Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

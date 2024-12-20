@@ -1,20 +1,13 @@
-package com.emil.linksy_user.controller;
+package com.emil.linksy_cloud.controller;
 
-import com.emil.linksy_user.exception.UserNotFoundException;
-import com.emil.linksy_user.service.MediaService;
-import com.emil.linksy_user.service.UserService;
+import com.emil.linksy_cloud.exception.UserNotFoundException;
+import com.emil.linksy_cloud.service.MediaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/upload")
@@ -28,18 +21,11 @@ public class CloudController {
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(@RequestParam(value = "image") MultipartFile avatar)  {
          Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-         CompletableFuture<Boolean> future = mediaService.requestAvatarUpload(userId, avatar);
-         try {
-            boolean success = future.get();
-            if (success) {
-                return ResponseEntity.ok().build();
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+         mediaService.consumeAvatar(userId,avatar);
+         return ResponseEntity.ok().build();
     }
+
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404

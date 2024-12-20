@@ -3,6 +3,7 @@ package com.emil.linksy_cloud.kafka;
 
 
 import com.emil.linksy_cloud.model.MediaResponse;
+import com.emil.linksy_cloud.model.PostKafkaResponse;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -28,12 +29,25 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, MediaResponse> producerFactory() {
+    public ProducerFactory<String, MediaResponse> producerMediaFactory() {
         return new DefaultKafkaProducerFactory<>(producerConfig());
     }
 
     @Bean
-    public KafkaTemplate<String, MediaResponse> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, MediaResponse> kafkaMediaTemplate() {
+        return new KafkaTemplate<>(producerMediaFactory());
     }
+
+
+    @Bean
+    public ProducerFactory<String, PostKafkaResponse> producerPostFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
+
+    @Bean
+    public KafkaTemplate<String, PostKafkaResponse> kafkaPostTemplate() {
+        return new KafkaTemplate<>(producerPostFactory());
+    }
+
+
 }

@@ -1,14 +1,12 @@
 package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.UserNotFoundException;
-import com.emil.linksy_user.model.Post;
-import com.emil.linksy_user.model.PostDto;
-import com.emil.linksy_user.model.PostResponse;
-import com.emil.linksy_user.model.User;
+import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.PostRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.util.Topic;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,23 +22,21 @@ public class PostService {
     private final MediaService mediaService;
 
 
-    public void createPost(Long authorId,PostDto post) {
+    @KafkaListener(topics = "postResponse", groupId = "group_id_post", containerFactory = "postKafkaResponseKafkaListenerContainerFactory")
+    public void consumePost(PostKafkaResponse response) {
+        Long authorId = response.getAuthorId();
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         Post newPost = new Post();
         newPost.setUser(author);
-        String text = post.getText();
-        if (!text.trim().isEmpty()) newPost.setText(post.getText());
+        newPost.setText(response.getText());
+        newPost.setImageUrl(response.getImageUrl());
+        newPost.setVideoUrl(response.getVideoUrl());
+        newPost.setAudioUrl(response.getAudioUrl());
+        newPost.setVoiceUrl(response.getVoiceUrl());
         postRepository.save(newPost);
-        MultipartFile image = post.getImage();
-        MultipartFile video = post.getVideo();
-        MultipartFile audio = post.getAudio();
-        MultipartFile voice = post.getVoice();
-        if (image!=null) mediaService.requestPostResourcesUpload(newPost.getId(), image, Topic.IMAGE_POST_REQUEST);
-        if (video!=null) mediaService.requestPostResourcesUpload(newPost.getId(), video, Topic.VIDEO_POST_REQUEST);
-        if (audio!=null) mediaService.requestPostResourcesUpload(newPost.getId(), audio, Topic.AUDIO_POST_REQUEST);
-        if (voice!=null) mediaService.requestPostResourcesUpload(newPost.getId(), voice, Topic.VOICE_POST_REQUEST);
     }
+
 
     public List<PostResponse> getUserPosts(Long userId) {
         User user = userRepository.findById(userId)
