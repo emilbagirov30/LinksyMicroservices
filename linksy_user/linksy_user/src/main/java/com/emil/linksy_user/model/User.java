@@ -33,10 +33,10 @@ public class User {
     private List<Post> posts;
     @NotBlank
     private String password;
-    @NotEmpty
+
     @Column(name = "avatar_url")
     private String avatarUrl;
-    @NotBlank
+
     private String link;
 
     @Temporal(TemporalType.DATE)
