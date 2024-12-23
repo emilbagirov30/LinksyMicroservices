@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class PostService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
-    private final MediaService mediaService;
+
 
 
     @KafkaListener(topics = "postResponse", groupId = "group_id_post", containerFactory = "postKafkaResponseKafkaListenerContainerFactory")

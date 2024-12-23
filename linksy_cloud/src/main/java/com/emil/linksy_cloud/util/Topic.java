@@ -9,7 +9,8 @@ public enum Topic {
     AUDIO_POST_RESPONSE("audioPostResponse"),
     VIDEO_POST_RESPONSE("videoPostResponse"),
     VOICE_POST_RESPONSE("voicePostResponse"),
-    POST_RESPONSE("postResponse");
+    POST_RESPONSE("postResponse"),
+    MOMENT_RESPONSE("momentResponse");
     private final String topic;
 
     Topic(String topic) {

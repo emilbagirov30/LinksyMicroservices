@@ -1,12 +1,11 @@
 package com.emil.linksy_cloud.service;
 
 import com.emil.linksy_cloud.model.PostKafkaResponse;
+import com.emil.linksy_cloud.model.MomentKafkaResponse;
 import com.emil.linksy_cloud.util.Topic;
 import lombok.RequiredArgsConstructor;
-import com.emil.linksy_cloud.model.MediaRequest;
 import com.emil.linksy_cloud.model.MediaResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,11 +31,11 @@ public class MediaService {
     private String domain;
     private final KafkaTemplate<String, MediaResponse> kafkaMediaTemplate;
     private final KafkaTemplate<String, PostKafkaResponse> kafkaPostTemplate;
-
+    private final KafkaTemplate<String, MomentKafkaResponse> kafkaMomentTemplate;
     public void consumeAvatar(Long id, MultipartFile file) {
          byte[] fileBytes = getFileBytes(file);
          String avatarUrl = uploadResources(fileBytes,uploadImageDir,".png");
-         sendResponse(new MediaResponse(id,avatarUrl),Topic.AVATAR_RESPONSE);
+         sendMediaResponse(new MediaResponse(id,avatarUrl),Topic.AVATAR_RESPONSE);
     }
 
 
@@ -68,6 +67,37 @@ public class MediaService {
         sendPostResponse(new PostKafkaResponse(id,textPost,imageUrl,videoUrl,audioUrl,voiceUrl));
     }
 
+
+    public void consumeMoment(Long id, MultipartFile image, MultipartFile video,
+                            MultipartFile audio,String text) {
+        String textMoment = text.substring(1, text.length() - 1);
+        if (textMoment.isEmpty()) textMoment=null;
+        String imageUrl = null;
+        String videoUrl= null;
+        String audioUrl= null;
+
+        if (image!=null) {
+            byte[] imageBytes = getFileBytes(image);
+            imageUrl = uploadResources(imageBytes,uploadImageDir,".png");
+        }
+        if (video!=null) {
+            byte[] videoBytes = getFileBytes(video);
+            videoUrl = uploadResources(videoBytes,uploadVideoDir,".mp4");
+        }
+        if (audio!=null){
+            byte[] audioBytes = getFileBytes(audio);
+            audioUrl = uploadResources(audioBytes,uploadAudioDir,".mp3");
+        }
+
+        sendMomentResponse(new MomentKafkaResponse(id,imageUrl,videoUrl,audioUrl,textMoment));
+    }
+
+
+
+
+
+
+
     public String uploadResources( byte[] fileBytes,String dir,String ext)  {
         String uniqueFileName = UUID.randomUUID().toString() + UUID.randomUUID().toString() + "_" + System.currentTimeMillis() + ext;
         File directory = new File(dir);
@@ -85,13 +115,17 @@ public class MediaService {
 
 
 
-    public void sendResponse (MediaResponse response, Topic topic){
+    public void sendMediaResponse(MediaResponse response, Topic topic){
          kafkaMediaTemplate.send(topic.getTopic(),response);
     }
 
     public void sendPostResponse (PostKafkaResponse response){
-        kafkaPostTemplate.send("postResponse",response);
+        kafkaPostTemplate.send(Topic.POST_RESPONSE.getTopic(),response);
     }
+    public void sendMomentResponse (MomentKafkaResponse response){
+        kafkaMomentTemplate.send(Topic.MOMENT_RESPONSE.getTopic(),response);
+    }
+
 
 private byte [] getFileBytes (MultipartFile file){
     byte[] fileBytes = null;
