@@ -18,7 +18,7 @@ public class MomentController {
     }
 
     @GetMapping("/user_moments")
-    public ResponseEntity<List<MomentResponse>> getUserPosts() {
+    public ResponseEntity<List<MomentResponse>> getUserMoments() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<MomentResponse> userMoments = momentService.getUserMoments(userId);
         return ResponseEntity.ok(userMoments);
