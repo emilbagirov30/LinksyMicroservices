@@ -1,16 +1,15 @@
 package com.emil.linksy_user.model;
 
-import com.emil.linksy_user.util.FriendshipStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "linksy_friends")
+@Table(name = "linksy_subscriptions")
 @Getter
 @Setter
-public class Friend {
+public class Subscriptions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,9 +21,7 @@ public class Friend {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "friend_id")
-    private User friend;
+    @JoinColumn(name = "subscriber_id")
+    private User subscriber;
 
-    @Enumerated(EnumType.STRING)
-    private FriendshipStatus status;
 }
