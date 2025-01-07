@@ -107,8 +107,8 @@ class UserController {
     }
 
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Void> handleUserNotFound(UserNotFoundException ex) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
     }
     @ExceptionHandler(LinkAlreadyExistsException.class)

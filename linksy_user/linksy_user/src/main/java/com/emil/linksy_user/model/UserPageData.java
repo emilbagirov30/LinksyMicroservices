@@ -14,6 +14,7 @@ public class UserPageData {
     private String link;
     private String avatarUrl;
     private String birthday;
+    private Boolean isSubscriber;
     private Long subscriptionsCount;
     private Long subscribersCount;
 }

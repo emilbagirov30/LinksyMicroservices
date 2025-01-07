@@ -2,13 +2,15 @@ package com.emil.linksy_user.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "linksy_subscriptions")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 public class Subscriptions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

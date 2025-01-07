@@ -1,9 +1,8 @@
 package com.emil.linksy_user.service;
 
-import com.emil.linksy_user.exception.UserNotFoundException;
+import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.MomentRepository;
-import com.emil.linksy_user.repository.PostRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -24,7 +23,7 @@ public class MomentService {
     public void consumeMoment(MomentKafkaResponse response) {
         Long authorId = response.getAuthorId();
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         Moment newMoment = new Moment();
         newMoment.setUser(author);
         newMoment.setText(response.getText());
@@ -35,7 +34,7 @@ public class MomentService {
     }
     public List<MomentResponse> getUserMoments(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         List<Moment> moments = momentRepository.findByUser(user);
 
@@ -56,7 +55,7 @@ public class MomentService {
     }
     public void deleteMoment (Long userId,long momentId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         Moment moment = momentRepository.findById(momentId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         if (!moment.getUser().getId().equals(user.getId())) {

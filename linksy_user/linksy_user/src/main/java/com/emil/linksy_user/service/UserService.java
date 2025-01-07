@@ -68,14 +68,14 @@ public class UserService {
 
     public void requestPasswordChange(String email) {
         if (userRepository.findByEmail(email).isEmpty()) {
-            throw new UserNotFoundException("Пользователь с таким email не зарегистрирован");
+            throw new NotFoundException("Пользователь с таким email не зарегистрирован");
         }
         sendCodeToConfirmThePasswordChange(email);
     }
 
     public void confirmPasswordChange(String email, String code, String newPassword) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с таким email не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с таким email не найден"));
         if (!CodeGenerator.isValidCode(email, code)) {
             throw new InvalidVerificationCodeException("Неверный код подтверждения");
         }
@@ -96,7 +96,7 @@ public class UserService {
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
                    return new Token(accessToken,refreshToken);
                 })
-                .orElseThrow(() -> new UserNotFoundException("Invalid email or password"));
+                .orElseThrow(() -> new NotFoundException("Invalid email or password"));
     }
 
     public Token refreshAccessToken(String refreshToken) {
@@ -105,7 +105,7 @@ public class UserService {
         }
         String userId = String.valueOf(jwtToken.extractUserId(refreshToken, TokenType.REFRESH));
         userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         String newAccessToken = jwtToken.generateAccessToken(userId);
         String newRefreshToken = refreshToken;
         if (jwtToken.needsRefreshRenewal(refreshToken)) {
@@ -116,12 +116,12 @@ public class UserService {
     }
 
     public UserProfileData getUserProfileData(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         return new UserProfileData(userId,user.getUsername(),user.getLink(), user.getAvatarUrl());
     }
 
     public AllUserData getAllUserData(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         String birthday = null;
         if (user.getBirthday()!=null)
@@ -135,7 +135,7 @@ public class UserService {
         String avatarUrl = response.getUrl();
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             user.setAvatarUrl(avatarUrl);
             userRepository.save(user);
         }
@@ -144,7 +144,7 @@ public class UserService {
     public void updateUsername(Long userId, String newUsername) {
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             user.setUsername(newUsername);
             userRepository.save(user);
         }
@@ -153,7 +153,7 @@ public class UserService {
     public void updateLink(Long userId, String link) {
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             if (userRepository.existsByLinkAndIdNot(link, userId)) {
                 throw new LinkAlreadyExistsException("Link is already in use by another user");
             }
@@ -165,7 +165,7 @@ public class UserService {
     public void updateBirthday(Long userId, String birthday) throws ParseException {
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
             Date newBirthday = dateFormat.parse(birthday);
             user.setBirthday(newBirthday);
@@ -176,19 +176,19 @@ public class UserService {
     public void deleteAvatar(Long userId) {
         synchronized (getUserLock(userId)) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             user.setAvatarUrl("null");
             userRepository.save(user);
         }
     }
     public void changePassword(Long userId, ChangePassword changePassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
         if(correctPassword) {
             user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
             userRepository.save(user);
-        }else throw new UserNotFoundException("Invalid password");
+        }else throw new NotFoundException("Invalid password");
 
     }
 

@@ -1,14 +1,12 @@
 package com.emil.linksy_user.service;
 
-import com.emil.linksy_user.exception.UserNotFoundException;
+import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.PostRepository;
 import com.emil.linksy_user.repository.UserRepository;
-import com.emil.linksy_user.util.Topic;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -26,7 +24,7 @@ public class PostService {
     public void consumePost(PostKafkaResponse response) {
         Long authorId = response.getAuthorId();
         User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         Post newPost = new Post();
         newPost.setUser(author);
         newPost.setText(response.getText());
@@ -40,7 +38,7 @@ public class PostService {
 
     public List<PostResponse> getUserPosts(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         List<Post> posts = postRepository.findByUser(user);
 
@@ -65,7 +63,7 @@ public class PostService {
 
 public void deletePost (Long userId,long postId) {
     User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+            .orElseThrow(() -> new NotFoundException("User not found"));
     Post post = postRepository.findById(postId)
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getUser().getId().equals(user.getId())) {
