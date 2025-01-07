@@ -11,6 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class UserProfileData {
+    private Long id;
     private String username;
     private String link;
     private String avatarUrl;

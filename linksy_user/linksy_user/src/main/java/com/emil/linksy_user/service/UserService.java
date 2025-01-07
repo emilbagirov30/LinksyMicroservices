@@ -117,7 +117,7 @@ public class UserService {
 
     public UserProfileData getUserProfileData(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new UserProfileData(user.getUsername(),user.getLink(), user.getAvatarUrl());
+        return new UserProfileData(userId,user.getUsername(),user.getLink(), user.getAvatarUrl());
     }
 
     public AllUserData getAllUserData(Long userId) {
