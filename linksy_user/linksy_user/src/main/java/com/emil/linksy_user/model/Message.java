@@ -8,7 +8,6 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@EntityListeners(MessageListener.class)
 @Table(name = "linksy_message")
 @Getter
 @Setter
@@ -45,20 +44,4 @@ public class Message {
     private String voiceUrl;
 
 }
-class MessageListener {
 
-    @PostPersist
-    public void onPostPersist(Post entity) {
-
-    }
-
-    @PostUpdate
-    public void onPostUpdate(Post entity) {
-
-    }
-
-    @PostRemove
-    public void onPostRemove(Post entity) {
-
-    }
-}
