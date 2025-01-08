@@ -10,6 +10,7 @@ public enum Topic {
     VIDEO_POST_RESPONSE("videoPostResponse"),
     VOICE_POST_RESPONSE("voicePostResponse"),
     POST_RESPONSE("postResponse"),
+    MESSAGE_RESPONSE("messageResponse"),
     MOMENT_RESPONSE("momentResponse");
     private final String topic;
 

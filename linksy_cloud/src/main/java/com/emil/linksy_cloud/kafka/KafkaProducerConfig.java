@@ -3,6 +3,7 @@ package com.emil.linksy_cloud.kafka;
 
 
 import com.emil.linksy_cloud.model.MediaResponse;
+import com.emil.linksy_cloud.model.MessageKafkaResponse;
 import com.emil.linksy_cloud.model.PostKafkaResponse;
 import com.emil.linksy_cloud.model.MomentKafkaResponse;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -60,5 +61,14 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(producerMomentFactory());
     }
 
+    @Bean
+    public ProducerFactory<String, MessageKafkaResponse> producerMessageFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
 
+    @Bean
+    public KafkaTemplate<String, MessageKafkaResponse> kafkaMessageTemplate() {
+        return new KafkaTemplate<>(producerMessageFactory());
+
+    }
 }
