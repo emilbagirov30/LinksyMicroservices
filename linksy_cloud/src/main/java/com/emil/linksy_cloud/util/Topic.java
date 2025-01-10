@@ -11,7 +11,8 @@ public enum Topic {
     VOICE_POST_RESPONSE("voicePostResponse"),
     POST_RESPONSE("postResponse"),
     MESSAGE_RESPONSE("messageResponse"),
-    MOMENT_RESPONSE("momentResponse");
+    MOMENT_RESPONSE("momentResponse"),
+    GROUP_RESPONSE("groupResponse");
     private final String topic;
 
     Topic(String topic) {
