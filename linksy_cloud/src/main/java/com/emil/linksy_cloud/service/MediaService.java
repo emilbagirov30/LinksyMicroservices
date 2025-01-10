@@ -71,7 +71,7 @@ public class MediaService {
 
 
     public void consumeMessage(Long senderId,Long recipientId, String text, MultipartFile image, MultipartFile video,
-                            MultipartFile audio,MultipartFile voice) {
+                            MultipartFile audio,MultipartFile voice) throws InterruptedException {
         String textMessage = text.substring(1, text.length() - 1);
         if (textMessage.isEmpty()) textMessage=null;
         String imageUrl = null;

@@ -8,7 +8,7 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "linksy_message")
+@Table(name = "linksy_messages")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,19 +20,21 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @NotNull
+    @JoinColumn(name = "chat_id")
+    private Chat chat;
+
     @NotNull
     @ManyToOne
     @JoinColumn(name = "sender_id")
     private User sender;
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "recipient_id")
-    private User recipient;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "date",nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
     private Date date;
+
     private String text;
     @Column(name = "image_url")
     private String imageUrl;

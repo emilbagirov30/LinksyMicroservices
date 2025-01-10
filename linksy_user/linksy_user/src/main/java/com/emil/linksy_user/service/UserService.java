@@ -94,6 +94,8 @@ public class UserService {
                 .map(user -> {
                     String accessToken = jwtToken.generateAccessToken(user.getId().toString());
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
+                    user.setToken(refreshToken);
+                    userRepository.save(user);
                    return new Token(accessToken,refreshToken);
                 })
                 .orElseThrow(() -> new NotFoundException("Invalid email or password"));

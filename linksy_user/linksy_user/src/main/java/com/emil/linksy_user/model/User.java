@@ -33,6 +33,10 @@ public class User {
     private List<Post> posts;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Moment> moments;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatMember> chats;
+
     @NotBlank
     private String password;
 
@@ -40,7 +44,7 @@ public class User {
     private String avatarUrl;
 
     private String link;
-
+    private String token;
     @Temporal(TemporalType.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
     private Date birthday;

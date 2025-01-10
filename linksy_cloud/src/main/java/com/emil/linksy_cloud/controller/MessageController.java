@@ -24,7 +24,7 @@ public class MessageController {
                                              @RequestParam(value = "image", required = false) MultipartFile image,
                                              @RequestParam(value = "video", required = false) MultipartFile video,
                                              @RequestParam(value = "audio", required = false) MultipartFile audio,
-                                             @RequestParam(value = "voice", required = false) MultipartFile voice) {
+                                             @RequestParam(value = "voice", required = false) MultipartFile voice) throws InterruptedException {
         Long senderId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         mediaService.consumeMessage(senderId,recipientId,text,image,video,audio,voice);
         return ResponseEntity.ok().build();

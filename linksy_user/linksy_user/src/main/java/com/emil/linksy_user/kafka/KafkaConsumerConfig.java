@@ -99,7 +99,7 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, MessageKafkaResponse> messageKafkaResponseKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String,  MessageKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, MessageKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(messageKafkaResponseConsumerFactory());
         return factory;
     }
