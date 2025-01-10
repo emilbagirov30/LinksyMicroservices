@@ -11,6 +11,6 @@ import java.util.Optional;
 public interface ChatMemberRepository extends JpaRepository<ChatMember, Long> {
     List<ChatMember> findByUser(User user);
     List<ChatMember> findByChat(Chat chat);
-
+    boolean existsByChatAndUser(Chat chat, User user);
 
 }

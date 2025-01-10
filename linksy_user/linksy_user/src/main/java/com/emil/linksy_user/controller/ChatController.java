@@ -1,6 +1,7 @@
 package com.emil.linksy_user.controller;
 
 import com.emil.linksy_user.model.ChatResponse;
+import com.emil.linksy_user.model.UserResponse;
 import com.emil.linksy_user.service.ChatService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,11 +26,17 @@ public class ChatController {
     }
 
     @GetMapping("/users_chat_id")
-    public ResponseEntity<Long> getUserChatId(@RequestParam("id")Long user2id){
+    public ResponseEntity<Long> getUsersChatId(@RequestParam("id")Long user2id){
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
         return ResponseEntity.ok(chatService.getChatId(userId,user2id));
     }
 
+    @GetMapping("/group/members/{id}")
+        public ResponseEntity<List<UserResponse>> getGroupMembers(@PathVariable("id") Long chatId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var result = chatService.getGroupMembers(userId,chatId);
+        System.out.println(result.size());
+        return ResponseEntity.ok(result);
+    }
 
 }

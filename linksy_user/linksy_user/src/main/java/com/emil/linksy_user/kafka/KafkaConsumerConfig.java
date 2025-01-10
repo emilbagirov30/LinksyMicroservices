@@ -1,9 +1,6 @@
 package com.emil.linksy_user.kafka;
 
-import com.emil.linksy_user.model.MediaResponse;
-import com.emil.linksy_user.model.MessageKafkaResponse;
-import com.emil.linksy_user.model.MomentKafkaResponse;
-import com.emil.linksy_user.model.PostKafkaResponse;
+import com.emil.linksy_user.model.*;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +12,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,6 +99,29 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, MessageKafkaResponse> messageKafkaResponseKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, MessageKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(messageKafkaResponseConsumerFactory());
+        return factory;
+    }
+
+
+
+
+
+    @Bean
+    public ConsumerFactory<String, GroupKafkaResponse> groupKafkaResponseConsumerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "group_id_group");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(),
+                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(GroupKafkaResponse.class, false)));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, GroupKafkaResponse> groupKafkaResponseKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, GroupKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(groupKafkaResponseConsumerFactory());
         return factory;
     }
 }
