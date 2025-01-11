@@ -124,4 +124,25 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(groupKafkaResponseConsumerFactory());
         return factory;
     }
+
+
+
+    @Bean
+    public ConsumerFactory<String, ChannelKafkaResponse> channelKafkaResponseConsumerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "group_id_channel");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(),
+                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(ChannelKafkaResponse.class, false)));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ChannelKafkaResponse> channelKafkaResponseKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, ChannelKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(channelKafkaResponseConsumerFactory());
+        return factory;
+    }
 }

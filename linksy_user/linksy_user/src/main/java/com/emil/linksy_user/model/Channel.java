@@ -13,13 +13,12 @@ public class Channel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;
-
     @NotNull
     private String name;
-
-    @NotNull
     private String description;
-
+    private String link;
+    @Column(name = "avatar_url")
+    private String avatarUrl;
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;

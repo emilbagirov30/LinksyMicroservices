@@ -1,6 +1,7 @@
 package com.emil.linksy_cloud.service;
 
 import com.emil.linksy_cloud.model.*;
+import com.emil.linksy_cloud.util.LinksyTools;
 import com.emil.linksy_cloud.util.Topic;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,7 @@ public class MediaService {
     private final KafkaTemplate<String, MomentKafkaResponse> kafkaMomentTemplate;
     private final KafkaTemplate<String, MessageKafkaResponse> kafkaMessageTemplate;
     private final KafkaTemplate<String, GroupKafkaResponse> kafkaGroupTemplate;
+    private final KafkaTemplate<String, ChannelKafkaResponse> kafkaChannelTemplate;
     public void consumeAvatar(Long id, MultipartFile file) {
          byte[] fileBytes = getFileBytes(file);
          String avatarUrl = uploadResources(fileBytes,uploadImageDir,".png");
@@ -60,6 +62,21 @@ public class MediaService {
 
 
 
+    public void consumeChannel(Long ownerId, String name,String link,String description,String type, MultipartFile avatar) {
+        String channelName = LinksyTools.clearQuotes(name);
+        String channelLink = LinksyTools.clearQuotes(link);
+        String channelDescription = LinksyTools.clearQuotes(description);
+        String channelType = LinksyTools.clearQuotes(type);
+        if (channelLink.isEmpty()) channelLink=null;
+        if (channelDescription.isEmpty()) channelDescription=null;
+        if (channelType.isEmpty()) channelType=null;
+        String avatarUrl = "null";
+        if (avatar!=null) {
+            byte[] fileBytes = getFileBytes(avatar);
+            avatarUrl = uploadResources(fileBytes, uploadImageDir, ".png");
+        }
+        sendChannelResponse(new ChannelKafkaResponse(ownerId,channelName,channelLink,channelDescription,channelType,avatarUrl));
+    }
 
 
 
@@ -68,7 +85,7 @@ public class MediaService {
 
     public void consumePost(Long id, String text, MultipartFile image, MultipartFile video,
                             MultipartFile audio,MultipartFile voice) {
-        String textPost = text.substring(1, text.length() - 1);
+        String textPost = LinksyTools.clearQuotes(text);
         if (textPost.isEmpty()) textPost=null;
         String imageUrl = null;
         String videoUrl= null;
@@ -97,7 +114,7 @@ public class MediaService {
 
     public void consumeMessage(Long senderId,Long recipientId, String text, MultipartFile image, MultipartFile video,
                             MultipartFile audio,MultipartFile voice) throws InterruptedException {
-        String textMessage = text.substring(1, text.length() - 1);
+        String textMessage = LinksyTools.clearQuotes(text);
         if (textMessage.isEmpty()) textMessage=null;
         String imageUrl = null;
         String videoUrl= null;
@@ -125,7 +142,7 @@ public class MediaService {
 
     public void consumeMoment(Long id, MultipartFile image, MultipartFile video,
                             MultipartFile audio,String text) {
-        String textMoment = text.substring(1, text.length() - 1);
+        String textMoment = LinksyTools.clearQuotes(text);
         if (textMoment.isEmpty()) textMoment=null;
         String imageUrl = null;
         String videoUrl= null;
@@ -179,6 +196,10 @@ public class MediaService {
     }
     public void sendGroupResponse (GroupKafkaResponse response){
        kafkaGroupTemplate.send(Topic.GROUP_RESPONSE.getTopic(),response);
+    }
+
+    public void sendChannelResponse (ChannelKafkaResponse response){
+        kafkaChannelTemplate.send(Topic.CHANNEL_RESPONSE.getTopic(),response);
     }
 
 private byte [] getFileBytes (MultipartFile file){

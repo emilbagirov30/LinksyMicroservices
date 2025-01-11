@@ -1,6 +1,7 @@
 package com.emil.linksy_cloud.controller;
 
 import com.emil.linksy_cloud.service.MediaService;
+import com.emil.linksy_cloud.util.LinksyTools;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class ChatController {
                                              @RequestParam("name") String name,
                                              @RequestParam(value = "image", required = false) MultipartFile image){
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        List<Long> participants = Arrays.stream(participantIds.substring(1,participantIds.length()-1).split(","))
+        List<Long> participants = Arrays.stream(LinksyTools.clearQuotes(participantIds).split(","))
                 .map(Long::parseLong)
                 .collect(Collectors.toList());
         participants.add(userId);

@@ -1,16 +1,18 @@
 package com.emil.linksy_cloud.model;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GroupKafkaResponse {
-    private  List<Long> participantIds;
-    private String avatarUrl;
+public class ChannelKafkaResponse {
+    private  Long ownerId;
     private String name;
+    private String link;
+    private String description;
+    private  String type;
+    private String avatarUrl;
 }

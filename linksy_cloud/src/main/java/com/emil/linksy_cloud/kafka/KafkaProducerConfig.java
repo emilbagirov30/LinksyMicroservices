@@ -80,4 +80,14 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(producerGroupFactory());
 
     }
+    @Bean
+    public ProducerFactory<String, ChannelKafkaResponse> producerChannelFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
+
+    @Bean
+    public KafkaTemplate<String, ChannelKafkaResponse> kafkaChannelTemplate() {
+        return new KafkaTemplate<>(producerChannelFactory());
+
+    }
 }

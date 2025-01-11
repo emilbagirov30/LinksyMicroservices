@@ -12,6 +12,7 @@ public enum Topic {
     POST_RESPONSE("postResponse"),
     MESSAGE_RESPONSE("messageResponse"),
     MOMENT_RESPONSE("momentResponse"),
+    CHANNEL_RESPONSE("channelResponse"),
     GROUP_RESPONSE("groupResponse");
     private final String topic;
 
