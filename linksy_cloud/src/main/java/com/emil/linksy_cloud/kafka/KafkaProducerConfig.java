@@ -90,4 +90,16 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(producerChannelFactory());
 
     }
+
+
+    @Bean
+    public ProducerFactory<String,ChannelPostKafkaResponse> producerChannelPostFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
+
+    @Bean
+    public KafkaTemplate<String, ChannelPostKafkaResponse> kafkaChannelPostTemplate() {
+        return new KafkaTemplate<>(producerChannelPostFactory());
+
+    }
 }

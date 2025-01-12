@@ -22,7 +22,7 @@ public class PostController {
                                              @RequestParam(value = "audio", required = false) MultipartFile audio,
                                              @RequestParam(value = "voice", required = false) MultipartFile voice) {
         Long authorId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        mediaService.consumePost(authorId,text,image,video,audio,voice);
+        mediaService.producePost(authorId,text,image,video,audio,voice);
         return ResponseEntity.ok().build();
     }
 

@@ -21,7 +21,7 @@ public class CloudController {
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(@RequestParam(value = "image") MultipartFile avatar)  {
          Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-         mediaService.consumeAvatar(userId,avatar);
+         mediaService.produceAvatar(userId,avatar);
          return ResponseEntity.ok().build();
     }
 

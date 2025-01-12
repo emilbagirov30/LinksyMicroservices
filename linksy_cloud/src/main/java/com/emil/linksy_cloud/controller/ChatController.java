@@ -29,7 +29,7 @@ public class ChatController {
                 .map(Long::parseLong)
                 .collect(Collectors.toList());
         participants.add(userId);
-        mediaService.consumeGroup(participants, image, name);
+        mediaService.produceGroup(participants, image, name);
         return ResponseEntity.ok().build();
     }
 

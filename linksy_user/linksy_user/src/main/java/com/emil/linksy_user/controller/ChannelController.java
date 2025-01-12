@@ -1,15 +1,10 @@
 package com.emil.linksy_user.controller;
 
-import com.emil.linksy_user.model.ChannelPageData;
-import com.emil.linksy_user.model.ChannelResponse;
-import com.emil.linksy_user.model.UserPageData;
+import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.service.ChannelService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,4 +30,58 @@ private final ChannelService channelService;
         var pageData = channelService.getChannelPageData(finderId,id);
         return ResponseEntity.ok(pageData);
     }
+
+
+    @PostMapping("/submit")
+    public ResponseEntity<Void> submitRequest(@RequestParam("id") Long channelId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.submitRequest(userId,channelId);
+        return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/delete_request")
+    public ResponseEntity<Void> deleteRequest(@RequestParam("id") Long channelId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.deleteRequest(userId,channelId);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("/subscriptions_request")
+    public ResponseEntity<List<UserResponse>> getChannelSubscriptionRequests(@RequestParam("id") Long channelId) {
+        Long useId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var subscriptions = channelService.getChannelSubscriptionRequests(useId,channelId);
+        return ResponseEntity.ok(subscriptions);
+    }
+
+    @PostMapping("/requests/accept")
+    public ResponseEntity<Void> acceptUserToChannel(@RequestParam("id") Long channelId,
+                                                    @RequestParam("id") Long candidateId) {
+        Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.acceptUserToChannel(ownerId,channelId,candidateId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/requests/reject")
+    public ResponseEntity<Void>  rejectSubscriptionRequest(@RequestParam("id") Long channelId,
+                                                    @RequestParam("id") Long candidateId) {
+        Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.rejectSubscriptionRequest(ownerId,channelId,candidateId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/posts/{id}")
+    public ResponseEntity<List<ChannelPostResponse>> getChannelsPost(@PathVariable("id") Long channelId) {
+        Long useId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var posts = channelService.getChannelsPost(useId,channelId);
+        return ResponseEntity.ok(posts);
+    }
+
+
+    @GetMapping("/members/{id}")
+    public ResponseEntity<List<UserResponse>> getGroupMembers(@PathVariable("id") Long channelId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var result = channelService.getChannelMembers(userId,channelId);
+        return ResponseEntity.ok(result);
+    }
+
 }

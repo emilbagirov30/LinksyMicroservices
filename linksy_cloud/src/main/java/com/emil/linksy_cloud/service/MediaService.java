@@ -35,20 +35,15 @@ public class MediaService {
     private final KafkaTemplate<String, MessageKafkaResponse> kafkaMessageTemplate;
     private final KafkaTemplate<String, GroupKafkaResponse> kafkaGroupTemplate;
     private final KafkaTemplate<String, ChannelKafkaResponse> kafkaChannelTemplate;
-    public void consumeAvatar(Long id, MultipartFile file) {
+    private final KafkaTemplate<String, ChannelPostKafkaResponse> kafkaChannelPostTemplate;
+    public void produceAvatar(Long id, MultipartFile file) {
          byte[] fileBytes = getFileBytes(file);
          String avatarUrl = uploadResources(fileBytes,uploadImageDir,".png");
          sendMediaResponse(new MediaResponse(id,avatarUrl),Topic.AVATAR_RESPONSE);
     }
 
 
-
-
-
-
-
-
-    public void consumeGroup(List<Long>participantIds, MultipartFile avatar,String name) {
+    public void produceGroup(List<Long>participantIds, MultipartFile avatar, String name) {
         String avatarUrl = "null";
         if (avatar!=null) {
             byte[] fileBytes = getFileBytes(avatar);
@@ -62,7 +57,7 @@ public class MediaService {
 
 
 
-    public void consumeChannel(Long ownerId, String name,String link,String description,String type, MultipartFile avatar) {
+    public void produceChannel(Long ownerId, String name, String link, String description, String type, MultipartFile avatar) {
         String channelName = LinksyTools.clearQuotes(name);
         String channelLink = LinksyTools.clearQuotes(link);
         String channelDescription = LinksyTools.clearQuotes(description);
@@ -83,8 +78,8 @@ public class MediaService {
 
 
 
-    public void consumePost(Long id, String text, MultipartFile image, MultipartFile video,
-                            MultipartFile audio,MultipartFile voice) {
+    public void producePost(Long id, String text, MultipartFile image, MultipartFile video,
+                            MultipartFile audio, MultipartFile voice) {
         String textPost = LinksyTools.clearQuotes(text);
         if (textPost.isEmpty()) textPost=null;
         String imageUrl = null;
@@ -112,8 +107,8 @@ public class MediaService {
     }
 
 
-    public void consumeMessage(Long senderId,Long recipientId, String text, MultipartFile image, MultipartFile video,
-                            MultipartFile audio,MultipartFile voice) throws InterruptedException {
+    public void produceMessage(Long senderId, Long recipientId, String text, MultipartFile image, MultipartFile video,
+                               MultipartFile audio, MultipartFile voice) throws InterruptedException {
         String textMessage = LinksyTools.clearQuotes(text);
         if (textMessage.isEmpty()) textMessage=null;
         String imageUrl = null;
@@ -140,8 +135,8 @@ public class MediaService {
         sendMessageResponse(new MessageKafkaResponse(senderId,recipientId,textMessage,imageUrl,videoUrl,audioUrl,voiceUrl));
     }
 
-    public void consumeMoment(Long id, MultipartFile image, MultipartFile video,
-                            MultipartFile audio,String text) {
+    public void produceMoment(Long id, MultipartFile image, MultipartFile video,
+                              MultipartFile audio, String text) {
         String textMoment = LinksyTools.clearQuotes(text);
         if (textMoment.isEmpty()) textMoment=null;
         String imageUrl = null;
@@ -163,6 +158,38 @@ public class MediaService {
 
         sendMomentResponse(new MomentKafkaResponse(id,imageUrl,videoUrl,audioUrl,textMoment));
     }
+
+
+
+
+    public void produceChannelPost(Long ownerId,Long channelId, String text, MultipartFile image, MultipartFile video,
+                            MultipartFile audio,String pollTitle,List<String> options) {
+        String textPost = LinksyTools.clearQuotes(text);
+        String title = LinksyTools.clearQuotes(pollTitle);
+        if (textPost.isEmpty()) textPost=null;
+        String imageUrl = null;
+        String videoUrl= null;
+        String audioUrl= null;
+
+
+        if (image!=null) {
+            byte[] imageBytes = getFileBytes(image);
+            imageUrl = uploadResources(imageBytes,uploadImageDir,".png");
+        }
+        if (video!=null) {
+            byte[] videoBytes = getFileBytes(video);
+            videoUrl = uploadResources(videoBytes,uploadVideoDir,".mp4");
+        }
+        if (audio!=null){
+            byte[] audioBytes = getFileBytes(audio);
+            audioUrl = uploadResources(audioBytes,uploadAudioDir,".mp3");
+        }
+        sendChannelPostResponse(new ChannelPostKafkaResponse(ownerId,channelId,textPost,imageUrl,videoUrl,audioUrl,pollTitle,options));
+    }
+
+
+
+
 
     public String uploadResources( byte[] fileBytes,String dir,String ext)  {
         String uniqueFileName = UUID.randomUUID().toString() + UUID.randomUUID().toString() + "_" + System.currentTimeMillis() + ext;
@@ -200,6 +227,9 @@ public class MediaService {
 
     public void sendChannelResponse (ChannelKafkaResponse response){
         kafkaChannelTemplate.send(Topic.CHANNEL_RESPONSE.getTopic(),response);
+    }
+    public void sendChannelPostResponse (ChannelPostKafkaResponse response){
+        kafkaChannelPostTemplate.send(Topic.CHANNEL_POST_RESPONSE.getTopic(),response);
     }
 
 private byte [] getFileBytes (MultipartFile file){

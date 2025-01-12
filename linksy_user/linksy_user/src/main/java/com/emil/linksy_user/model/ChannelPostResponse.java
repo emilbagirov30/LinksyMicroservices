@@ -1,0 +1,26 @@
+package com.emil.linksy_user.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ChannelPostResponse {
+    private Long postId;
+    private String channelName;
+    private String channelAvatarUrl;
+    private String text;
+    private String imageUrl;
+    private String videoUrl;
+    private String audioUrl;
+    private String publishDate;
+    private String pollTitle;
+    private List<OptionResponse> options;
+    private Double averageRating;
+    private Long repostsCount;
+   // private Long commentsCount;
+}

@@ -24,7 +24,7 @@ public class MomentController {
                                            @RequestParam(value = "audio", required = false) MultipartFile audio,
                                            @RequestParam("text") String text) {
         Long authorId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        mediaService.consumeMoment(authorId,image,video,audio,text);
+        mediaService.produceMoment(authorId,image,video,audio,text);
         return ResponseEntity.ok().build();
     }
 

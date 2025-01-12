@@ -57,7 +57,7 @@ public class MomentService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Moment moment = momentRepository.findById(momentId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new NotFoundException("Post not found"));
         if (!moment.getUser().getId().equals(user.getId())) {
             throw new SecurityException("User does not own the moment");
         }

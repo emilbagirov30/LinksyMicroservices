@@ -6,8 +6,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "linksy_chats")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

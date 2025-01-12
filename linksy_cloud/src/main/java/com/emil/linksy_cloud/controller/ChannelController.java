@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/channels")
 public class ChannelController {
@@ -26,7 +28,24 @@ public class ChannelController {
                                               @RequestParam(value = "image", required = false) MultipartFile avatar) {
 
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        mediaService.consumeChannel(ownerId, name, link, description, type, avatar);
+        mediaService.produceChannel(ownerId, name, link, description, type, avatar);
         return ResponseEntity.ok().build();
     }
+
+
+
+    @PostMapping("/create_post")
+    public ResponseEntity<Void> createPost(  @RequestParam("id") Long channelId,
+                                             @RequestParam("text") String text,
+                                             @RequestParam(value = "image", required = false) MultipartFile image,
+                                             @RequestParam(value = "video", required = false) MultipartFile video,
+                                             @RequestParam(value = "audio", required = false) MultipartFile audio,
+                                             @RequestParam("title") String pollTitle,
+                                             @RequestParam(value = "options", required = false) List<String> options
+    ) {
+        Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        mediaService.produceChannelPost(ownerId,channelId,text,image,video,audio,pollTitle,options);
+        return ResponseEntity.ok().build();
+    }
+
 }
