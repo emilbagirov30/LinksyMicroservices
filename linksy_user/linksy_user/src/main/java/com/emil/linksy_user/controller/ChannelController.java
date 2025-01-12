@@ -83,5 +83,10 @@ private final ChannelService channelService;
         var result = channelService.getChannelMembers(userId,channelId);
         return ResponseEntity.ok(result);
     }
-
+    @DeleteMapping("/delete_post")
+    public ResponseEntity<Void> deletePost(@RequestParam Long channelId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+       channelService.deletePost(userId,channelId);
+        return ResponseEntity.ok().build();
+    }
 }

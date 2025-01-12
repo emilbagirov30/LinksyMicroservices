@@ -235,6 +235,15 @@ public class ChannelService {
                 })
                 .toList();
     }
-
+    public void deletePost (Long userId,long postId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        ChannelPost post = channelPostRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        if (!post.getChannel().getOwner().equals(user)) {
+            throw new SecurityException("User does not own the post");
+        }
+       channelPostRepository.delete(post);
+    }
 
 }
