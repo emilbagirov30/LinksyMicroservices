@@ -35,7 +35,6 @@ public class ChatController {
         public ResponseEntity<List<UserResponse>> getGroupMembers(@PathVariable("id") Long chatId){
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         var result = chatService.getGroupMembers(userId,chatId);
-        System.out.println(result.size());
         return ResponseEntity.ok(result);
     }
 

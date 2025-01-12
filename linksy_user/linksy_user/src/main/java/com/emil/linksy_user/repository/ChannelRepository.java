@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ChannelRepository extends JpaRepository<Channel, Long> {
 
-
+    boolean existsByLink(String link);
 }

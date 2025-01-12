@@ -1,5 +1,6 @@
 package com.emil.linksy_user.service;
 
+import com.emil.linksy_user.exception.LinkAlreadyExistsException;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
@@ -25,7 +26,11 @@ public class ChannelService {
             Channel channel = new Channel();
             channel.setOwner(owner);
             channel.setName(response.getName());
+        if (channelRepository.existsByLink(response.getLink())) {
+            channel.setLink(null);
+        }else {
             channel.setLink(response.getLink());
+        }
             channel.setAvatarUrl(response.getAvatarUrl());
             channel.setDescription(response.getDescription());
             channel.setType(response.getType());
@@ -52,12 +57,37 @@ public class ChannelService {
                    .average()
                    .orElse(-1.00);
            return  new ChannelResponse (channel.getId(),channel.getOwner().getId(),channel.getName(),
-                   channel.getLink(),channel.getAvatarUrl(),averageRating,channel.getType());
+                   channel.getLink(),channel.getAvatarUrl(),Math.round(averageRating * 100.0) / 100.0,channel.getType());
 
        }).toList();
    }
 
 
+   public ChannelPageData getChannelPageData (Long finderId,Long channelId){
+       User finder = userRepository.findById(finderId)
+               .orElseThrow(() -> new NotFoundException("User not found"));
+       Channel channel = channelRepository.findById(channelId)
+               .orElseThrow(() -> new NotFoundException("Channel not found"));
+       List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
+       Long memberCount = (long) channelMembers.size();
+
+
+       var isMemberList =channelMembers.stream().filter(channelMember -> channelMember.getUser().equals(finder)).toList();
+       Boolean isMember = !isMemberList.isEmpty();
+       String type = channel.getType();
+       String avatarUrl = channel.getAvatarUrl();
+       String name = channel.getName();
+       String description = channel.getDescription();
+       String link = channel.getLink();
+
+       var posts = channelPostRepository.findByChannel(channel);
+       Double averageRating = posts.stream()
+               .mapToLong(ChannelPost::getRating)
+               .average()
+               .orElse(-1.00);
+       Long ownerId = channel.getOwner().getId();
+       return new ChannelPageData(channelId,ownerId,name,link,avatarUrl,description,isMember,Math.round(averageRating * 100.0) / 100.0,type,memberCount);
+   }
 
 
 

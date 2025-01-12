@@ -1,6 +1,7 @@
 package com.emil.linksy_user.repository;
 
 
+import com.emil.linksy_user.model.Channel;
 import com.emil.linksy_user.model.ChannelMember;
 import com.emil.linksy_user.model.Moment;
 import com.emil.linksy_user.model.User;
@@ -11,5 +12,5 @@ import java.util.List;
 public interface ChannelMemberRepository  extends JpaRepository<ChannelMember, Long> {
 
     List<ChannelMember> findByUser(User user);
-
+    List<ChannelMember> findByChannel(Channel channel);
 }
