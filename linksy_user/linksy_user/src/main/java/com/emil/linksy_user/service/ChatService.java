@@ -171,8 +171,6 @@ public class ChatService {
             chatMember.setUser(user);
             chatMembers.add(chatMember);
         }
-
-
         chatMemberRepository.saveAll(chatMembers);
 
     }

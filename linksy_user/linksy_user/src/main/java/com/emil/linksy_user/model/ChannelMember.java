@@ -1,23 +1,22 @@
 package com.emil.linksy_user.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
-@Table(name = "linksy_chat_members")
+@Table(name = "linksy_channel_members")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ChatMember {
+public class ChannelMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 
     @ManyToOne
-    @JoinColumn(name = "chat_id")
-    private Chat chat;
+    @JoinColumn(name = "channel_id")
+    private Channel channel;
 
     @ManyToOne
     @JoinColumn(name = "member_id")

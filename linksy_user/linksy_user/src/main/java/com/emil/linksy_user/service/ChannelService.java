@@ -7,24 +7,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
 public class ChannelService {
     private final ChannelRepository channelRepository;
+    private final ChannelPostRepository channelPostRepository;
+    private final ChannelMemberRepository channelMemberRepository;
     private final UserRepository userRepository;
 
-
-
-
     @KafkaListener(topics = "channelResponse", groupId = "group_id_channel", containerFactory = "channelKafkaResponseKafkaListenerContainerFactory")
-    public void consumeGroup(ChannelKafkaResponse response) {
-
+    public void consumeChannel(ChannelKafkaResponse response) {
             User owner = userRepository.findById(response.getOwnerId())
                     .orElseThrow(() -> new NotFoundException("User not found"));
-
-
-
             Channel channel = new Channel();
             channel.setOwner(owner);
             channel.setName(response.getName());
@@ -33,12 +30,32 @@ public class ChannelService {
             channel.setDescription(response.getDescription());
             channel.setType(response.getType());
             channelRepository.save(channel);
+            ChannelMember channelMember = new ChannelMember();
+            channelMember.setChannel(channel);
+            channelMember.setUser(owner);
+            channelMemberRepository.save(channelMember);
     }
 
 
 
 
+   public List<ChannelResponse> getChannels (Long userId){
+       User user = userRepository.findById(userId)
+               .orElseThrow(() -> new NotFoundException("User not found"));
 
+       List<ChannelMember> channelMembers = channelMemberRepository.findByUser(user);
+       var channels =  channelMembers.stream().map(ChannelMember::getChannel);
+       return channels.map(channel -> {
+         var posts = channelPostRepository.findByChannel(channel);
+           Double averageRating = posts.stream()
+                   .mapToLong(ChannelPost::getRating)
+                   .average()
+                   .orElse(-1.00);
+           return  new ChannelResponse (channel.getId(),channel.getOwner().getId(),channel.getName(),
+                   channel.getLink(),channel.getAvatarUrl(),averageRating,channel.getType());
+
+       }).toList();
+   }
 
 
 

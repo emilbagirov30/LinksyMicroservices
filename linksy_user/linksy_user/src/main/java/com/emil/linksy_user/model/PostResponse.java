@@ -17,6 +17,6 @@ public class PostResponse {
     private String voiceUrl;
     private String text;
     private String publishDate;
-    private int likesCount;
-    private int repostsCount;
+    private Long likesCount;
+    private Long repostsCount;
 }
