@@ -12,8 +12,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "linksy_users")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

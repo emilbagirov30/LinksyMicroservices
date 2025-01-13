@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -22,7 +23,7 @@ public class ChannelService {
     private final ChannelSubscriptionsRequestRepository channelSubscriptionsRequestRepository;
     private final ChannelMemberRepository channelMemberRepository;
     private final UserRepository userRepository;
-
+    private final VoterRepository voterRepository;
     @KafkaListener(topics = "channelResponse", groupId = "group_id_channel", containerFactory = "channelKafkaResponseKafkaListenerContainerFactory")
     public void consumeChannel(ChannelKafkaResponse response) {
             User owner = userRepository.findById(response.getOwnerId())
@@ -200,11 +201,13 @@ public class ChannelService {
          return posts.stream().map(post ->{
                   List<OptionResponse> optionResponseList= null;
                   String title =null;
+                  Boolean isVoted = false;
              if (post.getPoll()!=null){
                  Poll poll = pollRepository.findById(post.getPoll().getId())
                          .orElseThrow(() -> new NotFoundException("Poll not found"));
-                 title = poll.getTitle();
+                   title = poll.getTitle();
                    var options = pollOptionsRepository.findByPoll(poll);
+                   isVoted = isVoted(options,finder);
                    optionResponseList = options.stream().map(op ->{
                        return new OptionResponse(op.getId(), op.getOption(), op.getSelectedCount());
                    }).toList();
@@ -212,12 +215,20 @@ public class ChannelService {
 
              return new ChannelPostResponse(post.getId(), channel.getName(),
                      channel.getAvatarUrl(), post.getText(), post.getImageUrl(),
-                     post.getVideoUrl(), post.getAudioUrl(), dateFormat.format(post.getPublicationTime()),title,optionResponseList,
+                     post.getVideoUrl(), post.getAudioUrl(), dateFormat.format(post.getPublicationTime()),title,isVoted,optionResponseList,
                      Math.round(averageRating * 100.0) / 100.0,post.getReposts());
          }).toList();
     }
 
 
+    private boolean isVoted(List<PollOptions> options, User user) {
+        List<Voter> voters = options.stream()
+                .flatMap(option -> voterRepository.findByOption(option).stream())
+                .toList();
+
+
+        return voters.stream().anyMatch(voter -> voter.getUser().equals(user));
+    }
 
     public List<UserResponse> getChannelMembers (Long userId, Long channelId) {
         User requester = userRepository.findById(userId)
@@ -270,4 +281,19 @@ public class ChannelService {
        channelMemberRepository.delete(channelMember);
     }
 
+
+
+    public void vote(Long userId,Long optionId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        PollOptions pollOptions = pollOptionsRepository.findById(optionId)
+                .orElseThrow(() -> new NotFoundException("Not found"));
+        Voter voter = new Voter();
+        voter.setUser(user);
+        voter.setOption(pollOptions);
+        voterRepository.save(voter);
+        var count = pollOptions.getSelectedCount();
+      pollOptions.setSelectedCount(count++);
+      pollOptionsRepository.save(pollOptions);
+    }
 }

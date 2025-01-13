@@ -105,4 +105,11 @@ private final ChannelService channelService;
         channelService.unsubscribe(subscriberId,id);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/poll/option/vote/{id}")
+    public ResponseEntity<Void> vote(@PathVariable("id") Long optionId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.vote(userId,optionId);
+        return ResponseEntity.ok().build();
+    }
 }

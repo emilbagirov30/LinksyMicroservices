@@ -19,6 +19,7 @@ public class ChannelPostResponse {
     private String audioUrl;
     private String publishDate;
     private String pollTitle;
+    private Boolean isVoted;
     private List<OptionResponse> options;
     private Double averageRating;
     private Long repostsCount;
