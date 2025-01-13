@@ -38,6 +38,7 @@ private final ChannelService channelService;
         channelService.submitRequest(userId,channelId);
         return ResponseEntity.ok().build();
     }
+
     @DeleteMapping("/delete_request")
     public ResponseEntity<Void> deleteRequest(@RequestParam("id") Long channelId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -87,6 +88,21 @@ private final ChannelService channelService;
     public ResponseEntity<Void> deletePost(@RequestParam Long channelId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
        channelService.deletePost(userId,channelId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/subscribe/{id}")
+    public ResponseEntity<Void> subscribe(@PathVariable("id") Long id) {
+        Long subscriberId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.subscribe(subscriberId,id);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @DeleteMapping("/unsubscribe/{id}")
+    public ResponseEntity<Void> unsubscribe(@PathVariable("id") Long id) {
+        Long subscriberId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.unsubscribe(subscriberId,id);
         return ResponseEntity.ok().build();
     }
 }

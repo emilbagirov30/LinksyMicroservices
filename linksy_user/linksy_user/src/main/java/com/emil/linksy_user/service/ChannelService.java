@@ -246,4 +246,28 @@ public class ChannelService {
        channelPostRepository.delete(post);
     }
 
+
+
+
+    public void subscribe(Long subscriberId,Long channelId){
+        User subscriber = userRepository.findById(subscriberId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+       ChannelMember channelMember = new ChannelMember();
+      channelMember.setUser(subscriber);
+      channelMember.setChannel(channel);
+      channelMemberRepository.save(channelMember);
+    }
+
+    public void unsubscribe(Long subscriberId,Long channelId){
+        User subscriber = userRepository.findById(subscriberId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+       ChannelMember channelMember = channelMemberRepository.findByUserAndChannel(subscriber,channel)
+                .orElseThrow(() -> new NotFoundException(" ChannelMember not found"));
+       channelMemberRepository.delete(channelMember);
+    }
+
 }
