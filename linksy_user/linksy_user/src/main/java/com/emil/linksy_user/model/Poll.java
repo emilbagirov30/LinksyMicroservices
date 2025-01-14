@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class Poll {
-
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private Long id;

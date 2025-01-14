@@ -165,13 +165,16 @@ public class MediaService {
     public void produceChannelPost(Long ownerId,Long channelId, String text, MultipartFile image, MultipartFile video,
                             MultipartFile audio,String pollTitle,List<String> options) {
         String textPost = LinksyTools.clearQuotes(text);
+        if (textPost.isEmpty()) textPost = null;
         String title = LinksyTools.clearQuotes(pollTitle);
-        if (textPost.isEmpty()) textPost=null;
+        if(title.isEmpty()) title=null;
         String imageUrl = null;
         String videoUrl= null;
         String audioUrl= null;
-
-
+        List<String> optionsList = null;
+         if(options!=null) {
+             optionsList = options.stream().map(LinksyTools::clearQuotes).toList();
+         }
         if (image!=null) {
             byte[] imageBytes = getFileBytes(image);
             imageUrl = uploadResources(imageBytes,uploadImageDir,".png");
@@ -184,7 +187,7 @@ public class MediaService {
             byte[] audioBytes = getFileBytes(audio);
             audioUrl = uploadResources(audioBytes,uploadAudioDir,".mp3");
         }
-        sendChannelPostResponse(new ChannelPostKafkaResponse(ownerId,channelId,textPost,imageUrl,videoUrl,audioUrl,pollTitle,options));
+        sendChannelPostResponse(new ChannelPostKafkaResponse(ownerId,channelId,textPost,imageUrl,videoUrl,audioUrl,title,optionsList));
     }
 
 

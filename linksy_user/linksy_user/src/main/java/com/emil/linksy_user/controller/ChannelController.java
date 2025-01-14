@@ -55,16 +55,16 @@ private final ChannelService channelService;
     }
 
     @PostMapping("/requests/accept")
-    public ResponseEntity<Void> acceptUserToChannel(@RequestParam("id") Long channelId,
-                                                    @RequestParam("id") Long candidateId) {
+    public ResponseEntity<Void> acceptUserToChannel(@RequestParam("channelId") Long channelId,
+                                                    @RequestParam("candidateId") Long candidateId) {
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         channelService.acceptUserToChannel(ownerId,channelId,candidateId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/requests/reject")
-    public ResponseEntity<Void>  rejectSubscriptionRequest(@RequestParam("id") Long channelId,
-                                                    @RequestParam("id") Long candidateId) {
+    public ResponseEntity<Void>  rejectSubscriptionRequest(@RequestParam("channelId") Long channelId,
+                                                    @RequestParam("candidateId") Long candidateId) {
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         channelService.rejectSubscriptionRequest(ownerId,channelId,candidateId);
         return ResponseEntity.ok().build();

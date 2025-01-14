@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -22,6 +23,7 @@ public class ChannelService {
     private final PollOptionsRepository pollOptionsRepository;
     private final ChannelSubscriptionsRequestRepository channelSubscriptionsRequestRepository;
     private final ChannelMemberRepository channelMemberRepository;
+    private final ChannelPostEvaluationsRepository channelPostEvaluationsRepository;
     private final UserRepository userRepository;
     private final VoterRepository voterRepository;
     @KafkaListener(topics = "channelResponse", groupId = "group_id_channel", containerFactory = "channelKafkaResponseKafkaListenerContainerFactory")
@@ -58,9 +60,11 @@ public class ChannelService {
        return channels.map(channel -> {
          var posts = channelPostRepository.findByChannel(channel);
            Double averageRating = posts.stream()
-                   .mapToLong(ChannelPost::getRating)
+                   .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
+                   .filter(Objects::nonNull)
+                   .mapToDouble(Double::doubleValue)
                    .average()
-                   .orElse(-1.00);
+                   .orElse(0.0);
            return  new ChannelResponse (channel.getId(),channel.getOwner().getId(),channel.getName(),
                    channel.getLink(),channel.getAvatarUrl(),Math.round(averageRating * 100.0) / 100.0,channel.getType());
 
@@ -68,32 +72,54 @@ public class ChannelService {
    }
 
 
-   public ChannelPageData getChannelPageData (Long finderId,Long channelId){
-       User finder = userRepository.findById(finderId)
-               .orElseThrow(() -> new NotFoundException("User not found"));
-       Channel channel = channelRepository.findById(channelId)
-               .orElseThrow(() -> new NotFoundException("Channel not found"));
-       List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
-       Long memberCount = (long) channelMembers.size();
-       var isMemberList =channelMembers.stream().filter(channelMember -> channelMember.getUser().equals(finder)).toList();
-       Boolean isMember = !isMemberList.isEmpty();
-       String type = channel.getType();
-       String avatarUrl = channel.getAvatarUrl();
-       String name = channel.getName();
-       String description = channel.getDescription();
-       String link = channel.getLink();
+    public ChannelPageData getChannelPageData(Long finderId, Long channelId) {
+        User finder = userRepository.findById(finderId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
 
-       var posts = channelPostRepository.findByChannel(channel);
-       Double averageRating = posts.stream()
-               .mapToLong(ChannelPost::getRating)
-               .average()
-               .orElse(-1.00);
-       Long ownerId = channel.getOwner().getId();
-       return new ChannelPageData(channelId,ownerId,name,link,avatarUrl,description,isMember,Math.round(averageRating * 100.0) / 100.0,type,memberCount);
-   }
+        List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
+        Long memberCount = (long) channelMembers.size();
+        boolean isMember = channelMembers.stream()
+                .anyMatch(channelMember -> channelMember.getUser().equals(finder));
+
+        String type = channel.getType();
+        String avatarUrl = channel.getAvatarUrl();
+        String name = channel.getName();
+        String description = channel.getDescription();
+        String link = channel.getLink();
+
+        var requests = channelSubscriptionsRequestRepository.findByChannel(channel);
+
+        var posts = channelPostRepository.findByChannel(channel);
+
+        Double averageRating = posts.stream()
+                .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
+                .filter(Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+
+        Long ownerId = channel.getOwner().getId();
+
+        return new ChannelPageData(
+                channelId,
+                ownerId,
+                name,
+                link,
+                avatarUrl,
+                description,
+                isMember,
+                Math.round(averageRating * 100.0) / 100.0,
+                type,
+                memberCount,
+                (long) requests.size()
+        );
+    }
 
 
-   public void submitRequest (Long userId,Long channelId){
+
+    public void submitRequest (Long userId,Long channelId){
        User candidate = userRepository.findById(userId)
                .orElseThrow(() -> new NotFoundException("User not found"));
        Channel channel = channelRepository.findById(channelId)
@@ -138,6 +164,8 @@ public class ChannelService {
        ChannelMember channelMember = new ChannelMember();
        channelMember.setUser(candidate);
        channelMember.setChannel(channel);
+       var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate,channel);
+       channelSubscriptionsRequestRepository.delete(request);
        channelMemberRepository.save(channelMember);
    }
 
@@ -159,66 +187,91 @@ public class ChannelService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(response.getChannelId())
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
-        if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
+        if (!channel.getOwner().getId().equals(owner.getId())) throw new SecurityException("User is not the owner channel");
 
         ChannelPost channelPost = new ChannelPost();
         channelPost.setChannel(channel);
         channelPost.setText(response.getText());
         channelPost.setImageUrl(response.getImageUrl());
         channelPost.setVideoUrl(response.getVideoUrl());
-        if (!response.getOptions().isEmpty()) {
-            Poll poll = new Poll();
-            poll.setTitle(response.getPollTitle());
-            pollRepository.save(poll);
-            channelPost.setPoll(poll);
-            var options = response.getOptions();
-            for (String option:options){
-                PollOptions pollOptions = new PollOptions();
-                pollOptions.setPoll(poll);
-                pollOptions.setOption(option);
-                pollOptions.setSelectedCount(0L);
-                pollOptionsRepository.save(pollOptions);
-            }
-        }
+        channelPost.setReposts(0L);
+                   if(response.getOptions()!=null) {
+                       if (!response.getOptions().isEmpty()) {
+                           Poll poll = new Poll();
+                           poll.setTitle(response.getPollTitle());
+                           pollRepository.save(poll);
+                           channelPost.setPoll(poll);
+                           var options = response.getOptions();
+                           for (String option : options) {
+                               PollOptions pollOptions = new PollOptions();
+                               pollOptions.setPoll(poll);
+                               pollOptions.setOption(option);
+                               pollOptions.setSelectedCount(0L);
+                               pollOptionsRepository.save(pollOptions);
+                           }
+                       }
+                   }
         channelPostRepository.save(channelPost);
     }
 
 
-    public List<ChannelPostResponse> getChannelsPost (Long userId,Long channelId){
+    public List<ChannelPostResponse> getChannelsPost(Long userId, Long channelId) {
         User finder = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
-        boolean isMember = channelMembers.stream().anyMatch(channelMember -> channelMember.getUser().equals(finder));
-        if (!isMember) throw new SecurityException("User is not a member of the channels");
+        boolean isMember = channelMembers.stream()
+                .anyMatch(channelMember -> channelMember.getUser().equals(finder));
+        if (!isMember) {
+            throw new SecurityException("User is not a member of the channel");
+        }
+
         var posts = channelPostRepository.findByChannel(channel);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-        Double averageRating = posts.stream()
-                .mapToLong(ChannelPost::getRating)
-                .average()
-                .orElse(-1.00);
-         return posts.stream().map(post ->{
-                  List<OptionResponse> optionResponseList= null;
-                  String title =null;
-                  Boolean isVoted = false;
-             if (post.getPoll()!=null){
-                 Poll poll = pollRepository.findById(post.getPoll().getId())
-                         .orElseThrow(() -> new NotFoundException("Poll not found"));
-                   title = poll.getTitle();
-                   var options = pollOptionsRepository.findByPoll(poll);
-                   isVoted = isVoted(options,finder);
-                   optionResponseList = options.stream().map(op ->{
-                       return new OptionResponse(op.getId(), op.getOption(), op.getSelectedCount());
-                   }).toList();
-             }
 
-             return new ChannelPostResponse(post.getId(), channel.getName(),
-                     channel.getAvatarUrl(), post.getText(), post.getImageUrl(),
-                     post.getVideoUrl(), post.getAudioUrl(), dateFormat.format(post.getPublicationTime()),title,isVoted,optionResponseList,
-                     Math.round(averageRating * 100.0) / 100.0,post.getReposts());
-         }).toList();
+        return posts.stream()
+                .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
+                .map(post -> {
+                    Double averageRating = channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId());
+                    if (averageRating == null) {
+                        averageRating = 0.0;
+                    }
+
+                    List<OptionResponse> optionResponseList = null;
+                    String title = null;
+                    Boolean isVoted = false;
+
+                    if (post.getPoll() != null) {
+                        Poll poll = pollRepository.findById(post.getPoll().getId())
+                                .orElseThrow(() -> new NotFoundException("Poll not found"));
+                        title = poll.getTitle();
+                        var options = pollOptionsRepository.findByPoll(poll);
+                        isVoted = isVoted(options, finder);
+                        optionResponseList = options.stream()
+                                .map(op -> new OptionResponse(op.getId(), op.getOption(), op.getSelectedCount()))
+                                .toList();
+                    }
+
+                    return new ChannelPostResponse(
+                            post.getId(),
+                            channel.getName(),
+                            channel.getAvatarUrl(),
+                            post.getText(),
+                            post.getImageUrl(),
+                            post.getVideoUrl(),
+                            post.getAudioUrl(),
+                            dateFormat.format(post.getPublicationTime()),
+                            title,
+                            isVoted,
+                            optionResponseList,
+                            Math.round(averageRating * 100.0) / 100.0,
+                            post.getReposts()
+                    );
+                })
+                .toList();
     }
+
 
 
     private boolean isVoted(List<PollOptions> options, User user) {
@@ -264,7 +317,7 @@ public class ChannelService {
         User subscriber = userRepository.findById(subscriberId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Chat not found"));
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
        ChannelMember channelMember = new ChannelMember();
       channelMember.setUser(subscriber);
       channelMember.setChannel(channel);
@@ -275,7 +328,7 @@ public class ChannelService {
         User subscriber = userRepository.findById(subscriberId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Chat not found"));
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
        ChannelMember channelMember = channelMemberRepository.findByUserAndChannel(subscriber,channel)
                 .orElseThrow(() -> new NotFoundException(" ChannelMember not found"));
        channelMemberRepository.delete(channelMember);
@@ -293,7 +346,8 @@ public class ChannelService {
         voter.setOption(pollOptions);
         voterRepository.save(voter);
         var count = pollOptions.getSelectedCount();
-      pollOptions.setSelectedCount(count++);
+
+      pollOptions.setSelectedCount(++count);
       pollOptionsRepository.save(pollOptions);
     }
 }

@@ -18,4 +18,5 @@ public class ChannelPageData {
     private Double rating;
     private String type;
     private Long subscribersCount;
+    private Long requestsCount;
 }

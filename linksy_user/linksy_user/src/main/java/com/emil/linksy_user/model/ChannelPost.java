@@ -9,8 +9,6 @@ import java.util.Date;
 
 @Entity
 @Table(name = "linksy_channel_posts")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -23,7 +21,6 @@ public class ChannelPost {
     @JoinColumn(name = "channel_id")
     private Channel channel;
     private String text;
-    private Long rating;
     private Long reposts;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "publication_time",nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
@@ -35,7 +32,7 @@ public class ChannelPost {
     private String videoUrl;
     @Column(name = "audio_url")
     private String audioUrl;
-    @NotNull
+
     @ManyToOne
     @JoinColumn(name = "poll_id")
     private Poll poll;

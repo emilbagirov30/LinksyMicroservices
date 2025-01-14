@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "linksy_polls")
+@Table(name = "linksy_poll_options")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

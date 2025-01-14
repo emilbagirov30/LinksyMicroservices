@@ -32,6 +32,8 @@ public class PostService {
         newPost.setVideoUrl(response.getVideoUrl());
         newPost.setAudioUrl(response.getAudioUrl());
         newPost.setVoiceUrl(response.getVoiceUrl());
+        newPost.setReposts(0L);
+        newPost.setLikes(0L);
         postRepository.save(newPost);
     }
 
