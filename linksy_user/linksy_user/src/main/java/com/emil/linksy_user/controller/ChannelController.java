@@ -112,4 +112,16 @@ private final ChannelService channelService;
         channelService.vote(userId,optionId);
         return ResponseEntity.ok().build();
     }
+
+
+    @GetMapping("/find/link")
+    public ResponseEntity<List<ChannelResponse>> findChannelByLink(@RequestParam("prefix") String prefix) {
+       var channels = channelService.findByLink(prefix);
+        return ResponseEntity.ok(channels);
+    }
+    @GetMapping("/find/name")
+    public ResponseEntity<List<ChannelResponse>> findChannelByName(@RequestParam("prefix") String prefix) {
+        var channels = channelService.findByName(prefix);
+        return ResponseEntity.ok(channels);
+    }
 }

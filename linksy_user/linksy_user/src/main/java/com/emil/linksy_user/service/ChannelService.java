@@ -49,7 +49,30 @@ public class ChannelService {
     }
 
 
+    public List<ChannelResponse> findByLink(String prefix) {
+        var channels = channelRepository.findByLinkStartingWith(prefix);
+        return mapToChannelResponse(channels);
+    }
 
+
+    public List<ChannelResponse> findByName(String prefix) {
+        var channels = channelRepository.findByNameStartingWith(prefix);
+        return mapToChannelResponse(channels);
+    }
+    private List<ChannelResponse> mapToChannelResponse(List<Channel> channels){
+        return channels.stream().map(channel -> {
+            var posts = channelPostRepository.findByChannel(channel);
+            Double averageRating = posts.stream()
+                    .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Double::doubleValue)
+                    .average()
+                    .orElse(0.0);
+            return new ChannelResponse(channel.getId(), channel.getOwner().getId(), channel.getName(),
+                    channel.getLink(), channel.getAvatarUrl(), Math.round(averageRating * 100.0) / 100.0,
+                    channel.getType());
+        }).toList();
+    }
 
    public List<ChannelResponse> getChannels (Long userId){
        User user = userRepository.findById(userId)
@@ -90,7 +113,7 @@ public class ChannelService {
         String link = channel.getLink();
 
         var requests = channelSubscriptionsRequestRepository.findByChannel(channel);
-
+        Boolean isSubmitted = channelSubscriptionsRequestRepository.findByUserAndChannel(finder, channel) != null;
         var posts = channelPostRepository.findByChannel(channel);
 
         Double averageRating = posts.stream()
@@ -110,6 +133,7 @@ public class ChannelService {
                 avatarUrl,
                 description,
                 isMember,
+                isSubmitted,
                 Math.round(averageRating * 100.0) / 100.0,
                 type,
                 memberCount,
@@ -119,7 +143,7 @@ public class ChannelService {
 
 
 
-    public void submitRequest (Long userId,Long channelId){
+    public void deleteRequest(Long userId,Long channelId){
        User candidate = userRepository.findById(userId)
                .orElseThrow(() -> new NotFoundException("User not found"));
        Channel channel = channelRepository.findById(channelId)
@@ -128,7 +152,7 @@ public class ChannelService {
        channelSubscriptionsRequestRepository.delete(request);
    }
 
-    public void deleteRequest (Long userId,Long channelId){
+    public void submitRequest (Long userId,Long channelId){
         User candidate = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
@@ -223,7 +247,7 @@ public class ChannelService {
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         boolean isMember = channelMembers.stream()
                 .anyMatch(channelMember -> channelMember.getUser().equals(finder));
-        if (!isMember) {
+        if (!isMember&&channel.getType().equals("PRIVATE")) {
             throw new SecurityException("User is not a member of the channel");
         }
 

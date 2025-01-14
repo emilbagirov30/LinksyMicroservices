@@ -15,6 +15,7 @@ public class ChannelPageData {
     private String avatarUrl;
     private String description;
     private Boolean isSubscriber;
+    private Boolean isSubmitted;
     private Double rating;
     private String type;
     private Long subscribersCount;

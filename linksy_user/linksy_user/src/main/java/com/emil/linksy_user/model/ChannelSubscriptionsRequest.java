@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Entity
-@Table(name = "linksy_channel_subscription_requests")
+@Table(name = "linksy_channel_subscription_requests",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"channel_id", "candidate_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -22,6 +24,4 @@ public class ChannelSubscriptionsRequest {
     @ManyToOne
     @JoinColumn(name = "candidate_id")
     private User user;
-
-
 }
