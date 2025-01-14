@@ -307,7 +307,21 @@ public class ChannelService {
         if (!post.getChannel().getOwner().equals(user)) {
             throw new SecurityException("User does not own the post");
         }
-       channelPostRepository.delete(post);
+        Poll poll = post.getPoll();
+        post.setPoll(null);
+        channelPostRepository.delete(post);
+        if (poll!=null){
+            var pollOptions = pollOptionsRepository.findByPoll(poll);
+            pollOptions.forEach(option -> {
+                var voters = voterRepository.findByOption(option);
+                voterRepository.deleteAll(voters);
+            });
+            pollOptions.forEach(pollOptionsRepository::delete);
+            pollRepository.delete(poll);
+        }
+        var channelPostEvaluations = channelPostEvaluationsRepository.findByChannelPost(post);
+        channelPostEvaluations.forEach(channelPostEvaluationsRepository::delete);
+
     }
 
 
