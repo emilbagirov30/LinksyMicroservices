@@ -6,6 +6,7 @@ import com.emil.linksy_user.repository.PostRepository;
 import com.emil.linksy_user.repository.UserPostCommentRepository;
 import com.emil.linksy_user.repository.UserPostLikeRepository;
 import com.emil.linksy_user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -113,15 +114,19 @@ public class PostService {
 
 
 
-
+    @Transactional
 public void deletePost (Long userId,long postId) {
     User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException("User not found"));
     Post post = postRepository.findById(postId)
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    if (!post.getUser().getId().equals(user.getId())) {
+    if (!post.getUser().getId().equals(user.getId()))
         throw new SecurityException("User does not own the post");
-    }
+
+    var likes = userPostLikeRepository.findByPost(post);
+    likes.forEach(userPostLikeRepository::delete);
+    userPostCommentRepository.deleteByPostAndParentIdIsNotNull(post);
+    userPostCommentRepository.deleteByPostAndParentIdIsNull(post);
     postRepository.delete(post);
 }
 

@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 
 public interface UserPostLikeRepository extends JpaRepository<UserPostLike,Long> {
 
@@ -14,4 +16,5 @@ public interface UserPostLikeRepository extends JpaRepository<UserPostLike,Long>
     Long countByPost(@Param("post") Post post);
     Boolean existsByPostAndUser(Post post, User user);
     UserPostLike findByPostAndUser (Post post, User user);
+    List<UserPostLike> findByPost (Post post);
 }

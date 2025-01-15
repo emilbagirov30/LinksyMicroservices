@@ -12,7 +12,7 @@ public interface UserPostCommentRepository extends JpaRepository<UserPostComment
 
     @Query("SELECT COUNT(u) FROM UserPostComment u WHERE u.post = :post")
     Long countByPost(@Param("post") Post post);
-
-
     List<UserPostComment> findByPost(Post post);
+    void deleteByPostAndParentIdIsNotNull(Post post);
+    void deleteByPostAndParentIdIsNull(Post post);
 }
