@@ -18,5 +18,7 @@ public class PostResponse {
     private String text;
     private String publishDate;
     private Long likesCount;
+    private Long commentsCount;
     private Long repostsCount;
+    private Boolean isLikedIt;
 }

@@ -47,7 +47,8 @@ public class PeopleController {
     }
     @GetMapping("/user_posts/{id}")
     public ResponseEntity<List<PostResponse>> getUserPosts(@PathVariable("id") Long id) {
-        List<PostResponse> userPosts = postService.getUserPosts(id);
+        Long finderId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<PostResponse> userPosts = postService.getOutsiderUserPosts(finderId,id);
         return ResponseEntity.ok(userPosts);
     }
     @GetMapping("/user_moments/{id}")
