@@ -1,6 +1,8 @@
 package com.emil.linksy_cloud.controller;
 
 import com.emil.linksy_cloud.service.MediaService;
+import com.emil.linksy_cloud.util.ChannelType;
+import com.emil.linksy_cloud.util.LinksyTools;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +30,9 @@ public class ChannelController {
                                               @RequestParam(value = "image", required = false) MultipartFile avatar) {
 
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        mediaService.produceChannel(ownerId, name, link, description, type, avatar);
+
+        ChannelType channelType =  (LinksyTools.clearQuotes(type).equals("PRIVATE")) ? ChannelType.PRIVATE : ChannelType.PUBLIC;
+        mediaService.produceChannel(ownerId, name, link, description, channelType, avatar);
         return ResponseEntity.ok().build();
     }
 

@@ -1,6 +1,7 @@
 package com.emil.linksy_cloud.service;
 
 import com.emil.linksy_cloud.model.*;
+import com.emil.linksy_cloud.util.ChannelType;
 import com.emil.linksy_cloud.util.LinksyTools;
 import com.emil.linksy_cloud.util.Topic;
 import lombok.RequiredArgsConstructor;
@@ -57,20 +58,18 @@ public class MediaService {
 
 
 
-    public void produceChannel(Long ownerId, String name, String link, String description, String type, MultipartFile avatar) {
+    public void produceChannel(Long ownerId, String name, String link, String description, ChannelType type, MultipartFile avatar) {
         String channelName = LinksyTools.clearQuotes(name);
         String channelLink = LinksyTools.clearQuotes(link);
         String channelDescription = LinksyTools.clearQuotes(description);
-        String channelType = LinksyTools.clearQuotes(type);
         if (channelLink.isEmpty()) channelLink=null;
         if (channelDescription.isEmpty()) channelDescription=null;
-        if (channelType.isEmpty()) channelType=null;
         String avatarUrl = "null";
         if (avatar!=null) {
             byte[] fileBytes = getFileBytes(avatar);
             avatarUrl = uploadResources(fileBytes, uploadImageDir, ".png");
         }
-        sendChannelResponse(new ChannelKafkaResponse(ownerId,channelName,channelLink,channelDescription,channelType,avatarUrl));
+        sendChannelResponse(new ChannelKafkaResponse(ownerId,channelName,channelLink,channelDescription,type,avatarUrl));
     }
 
 

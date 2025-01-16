@@ -106,7 +106,7 @@ public class ChannelService {
         boolean isMember = channelMembers.stream()
                 .anyMatch(channelMember -> channelMember.getUser().equals(finder));
 
-        String type = channel.getType();
+        var type = channel.getType();
         String avatarUrl = channel.getAvatarUrl();
         String name = channel.getName();
         String description = channel.getDescription();

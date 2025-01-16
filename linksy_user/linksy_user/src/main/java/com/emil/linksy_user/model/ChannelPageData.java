@@ -1,5 +1,6 @@
 package com.emil.linksy_user.model;
 
+import com.emil.linksy_user.util.ChannelType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,7 @@ public class ChannelPageData {
     private Boolean isSubscriber;
     private Boolean isSubmitted;
     private Double rating;
-    private String type;
+    private ChannelType type;
     private Long subscribersCount;
     private Long requestsCount;
 }

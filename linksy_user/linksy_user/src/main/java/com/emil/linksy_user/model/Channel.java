@@ -1,5 +1,6 @@
 package com.emil.linksy_user.model;
 
+import com.emil.linksy_user.util.ChannelType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -23,6 +24,7 @@ public class Channel {
     @JoinColumn(name = "owner_id")
     private User owner;
     @NotNull
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private ChannelType type;
 
 }

@@ -1,5 +1,6 @@
 package com.emil.linksy_user.model;
 
+import com.emil.linksy_user.util.ChannelType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,5 +15,5 @@ public class ChannelResponse {
     private String link;
     private String avatarUrl;
     private Double rating;
-    private String type;
+    private ChannelType type;
 }
