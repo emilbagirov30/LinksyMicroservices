@@ -1,6 +1,8 @@
 package com.emil.linksy_user.controller;
 
+import com.emil.linksy_user.exception.InvalidTokenException;
 import com.emil.linksy_user.exception.NotFoundException;
+import com.emil.linksy_user.exception.UserBlockedException;
 import com.emil.linksy_user.model.MomentResponse;
 import com.emil.linksy_user.model.PostResponse;
 import com.emil.linksy_user.model.UserPageData;
@@ -40,7 +42,7 @@ public class PeopleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserPageData> getUserData(@PathVariable("id") Long id) {
+    public ResponseEntity<UserPageData> getUserPageData(@PathVariable("id") Long id) {
         Long finderId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserPageData userPageData = peopleService.getUserPageData(finderId,id);
         return ResponseEntity.ok(userPageData);
@@ -105,8 +107,36 @@ public class PeopleController {
     }
 
 
+    @PostMapping("/blacklist/add/{id}")
+    public ResponseEntity<Void> addToBlackList(@PathVariable("id") Long id) {
+        Long initiatorId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+         peopleService.addToBlackList(initiatorId,id);
+        return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/blacklist/remove/{id}")
+    public ResponseEntity<Void> removeBlackList(@PathVariable("id") Long id) {
+        Long initiatorId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        peopleService.removeFromBlackList(initiatorId,id);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("/blacklist/all")
+    public ResponseEntity<List<UserResponse>> getBlackList() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+       var list = peopleService.getEveryoneOffTheBlacklist(userId);
+        return ResponseEntity.ok(list);
+    }
+
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+    }
+
+
+    @ExceptionHandler(UserBlockedException.class)
+    public ResponseEntity<String> handleUserBlockedException(UserBlockedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 }

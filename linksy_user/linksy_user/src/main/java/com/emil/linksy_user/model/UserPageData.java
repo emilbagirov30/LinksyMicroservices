@@ -17,4 +17,5 @@ public class UserPageData {
     private Boolean isSubscriber;
     private Long subscriptionsCount;
     private Long subscribersCount;
+    private Boolean isPageOwnerBlockedByViewer;
 }

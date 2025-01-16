@@ -1,13 +1,13 @@
 package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
-import com.emil.linksy_user.model.Subscriptions;
-import com.emil.linksy_user.model.User;
-import com.emil.linksy_user.model.UserPageData;
-import com.emil.linksy_user.model.UserResponse;
+import com.emil.linksy_user.exception.UserBlockedException;
+import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.repository.BlackListRepository;
 import com.emil.linksy_user.repository.SubscriptionsRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class PeopleService {
     private final UserRepository userRepository;
     private final SubscriptionsRepository subscriptionsRepository;
+    private final BlackListRepository blackListRepository;
 
     public List<UserResponse> findByLink(Long userId, String startsWith) {
         List<User> userList = userRepository.findByLinkStartingWith(startsWith);
@@ -95,6 +96,8 @@ public class PeopleService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+        boolean isBlockedByPageOwner = isBlocked(finder,user);
+        if (isBlockedByPageOwner) throw new UserBlockedException("Access is denied: you are blocked by the owner of the page.");
         String username = user.getUsername();
         String link = user.getLink();
         String avatarUrl = user.getAvatarUrl();
@@ -108,8 +111,11 @@ public class PeopleService {
         Long subscriptionsCount = subscriptionsRepository.countBySubscriber(user);
         Long subscribersCount = subscriptionsRepository.countByUser(user);
 
-        return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,subscriptionsCount,subscribersCount);
+        Boolean isPageOwnerBlockedByViewer = isBlocked(user,finder);
+        System.out.println(isPageOwnerBlockedByViewer);
+        return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,subscriptionsCount,subscribersCount, isPageOwnerBlockedByViewer);
     }
+
     private String formatBirthday(Date birthday) {
         if (birthday == null) {
             return null;
@@ -123,7 +129,45 @@ public class PeopleService {
 
 
 
+       public void addToBlackList (Long initiatorId,Long userId){
+           User initiator = userRepository.findById(initiatorId)
+                   .orElseThrow(() -> new NotFoundException("User not found"));
+           User user = userRepository.findById(userId)
+                   .orElseThrow(() -> new NotFoundException("User not found"));
 
+           BlackList blacklist = new BlackList();
+           blacklist.setInitiator(initiator);
+           blacklist.setBlocked(user);
+           blackListRepository.save(blacklist);
+       }
+
+
+    public void removeFromBlackList (Long initiatorId,Long userId){
+        User initiator = userRepository.findById(initiatorId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        BlackList blacklist = blackListRepository.findByInitiatorAndBlocked(initiator,user)
+                .orElseThrow(() -> new NotFoundException("Not found"));
+        blackListRepository.delete(blacklist);
+    }
+
+
+    public List<UserResponse> getEveryoneOffTheBlacklist (Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        var blacklists = blackListRepository.findByInitiator(user);
+        return blacklists.stream().map(blackList -> {
+            User blocked = blackList.getBlocked();
+            return new UserResponse(blocked.getId(), blocked.getAvatarUrl(), blocked.getUsername(), blocked.getLink());
+        }).toList();
+
+    }
+
+    private boolean isBlocked (User finder,User user){
+          return blackListRepository.existsByInitiatorAndBlocked(user,finder);
+    }
 
 
 }
