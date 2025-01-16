@@ -107,13 +107,6 @@ public class PostService {
                     );}).toList();
     }
 
-
-
-
-
-
-
-
     @Transactional
 public void deletePost (Long userId,long postId) {
     User user = userRepository.findById(userId)

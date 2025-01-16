@@ -6,6 +6,7 @@ import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
 import com.emil.linksy_user.util.CodeGenerator;
+import com.emil.linksy_user.util.MessageMode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -39,6 +40,7 @@ public class UserService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setAvatarUrl("null");
+        user.setMessageMode(MessageMode.ALL);
         pendingUsers.put(email, user);
         sendCodeToConfirmTheMail(email);
     }
@@ -199,6 +201,18 @@ public class UserService {
         return userLocks.get(userId);
     }
 
+    public MessageMode getUserMessageMode(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return user.getMessageMode();
+    }
+
+    public void setMessageMode (Long userId,MessageMode type){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        user.setMessageMode(type);
+        userRepository.save(user);
+    }
 
 }
 

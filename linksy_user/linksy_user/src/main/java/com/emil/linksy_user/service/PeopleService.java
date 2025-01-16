@@ -103,6 +103,7 @@ public class PeopleService {
         String avatarUrl = user.getAvatarUrl();
         String birthday = null;
         Boolean isSubscriber = subscriptionsRepository.existsByUserAndSubscriber(user,finder);
+        Boolean isSubscription =  subscriptionsRepository.existsByUserAndSubscriber(finder,user);
         var userBirthday = user.getBirthday();
         if (userBirthday!=null){
             birthday = formatBirthday(userBirthday);
@@ -112,8 +113,7 @@ public class PeopleService {
         Long subscribersCount = subscriptionsRepository.countByUser(user);
 
         Boolean isPageOwnerBlockedByViewer = isBlocked(user,finder);
-        System.out.println(isPageOwnerBlockedByViewer);
-        return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,subscriptionsCount,subscribersCount, isPageOwnerBlockedByViewer);
+        return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,subscriptionsCount,subscribersCount, isPageOwnerBlockedByViewer,user.getMessageMode(),isSubscription);
     }
 
     private String formatBirthday(Date birthday) {

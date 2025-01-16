@@ -2,6 +2,7 @@ package com.emil.linksy_user.controller;
 import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.service.UserService;
+import com.emil.linksy_user.util.MessageMode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -106,7 +107,19 @@ class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/message_mode")
+    public ResponseEntity<MessageMode> getMessageMode() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var mode = userService.getUserMessageMode(userId);
+        return ResponseEntity.ok(mode);
+    }
 
+    @PutMapping("/message_mode")
+    public ResponseEntity<Void> setMessageMode(@RequestBody MessageMode messageMode) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.setMessageMode(userId,messageMode);
+        return ResponseEntity.ok().build();
+    }
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
@@ -127,5 +140,4 @@ class UserController {
     public ResponseEntity<Void> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
     }
-
 }

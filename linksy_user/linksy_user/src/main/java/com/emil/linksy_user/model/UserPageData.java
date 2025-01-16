@@ -1,5 +1,6 @@
 package com.emil.linksy_user.model;
 
+import com.emil.linksy_user.util.MessageMode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,6 @@ public class UserPageData {
     private Long subscriptionsCount;
     private Long subscribersCount;
     private Boolean isPageOwnerBlockedByViewer;
+    private MessageMode messageMode;
+    private Boolean isSubscription;
 }
