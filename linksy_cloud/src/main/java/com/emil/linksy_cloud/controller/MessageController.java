@@ -17,16 +17,17 @@ public class MessageController {
         this.mediaService = mediaService;
     }
 
-    @PostMapping("/send/{id}")
+    @PostMapping("/send")
     public ResponseEntity<Void> sendMessage(
-            @PathVariable("id") Long recipientId,
-            @RequestParam("text") String text,
+            @RequestParam(value ="recipientId", required = false) Long recipientId,
+            @RequestParam(value ="chatId", required = false) Long chatId,
+            @RequestParam(value ="text", required = false) String text,
                                              @RequestParam(value = "image", required = false) MultipartFile image,
                                              @RequestParam(value = "video", required = false) MultipartFile video,
                                              @RequestParam(value = "audio", required = false) MultipartFile audio,
                                              @RequestParam(value = "voice", required = false) MultipartFile voice) throws InterruptedException {
         Long senderId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        mediaService.produceMessage(senderId,recipientId,text,image,video,audio,voice);
+        mediaService.produceMessage(senderId,recipientId,chatId,text,image,video,audio,voice);
         return ResponseEntity.ok().build();
     }
 }

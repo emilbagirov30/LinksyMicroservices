@@ -106,7 +106,7 @@ public class MediaService {
     }
 
 
-    public void produceMessage(Long senderId, Long recipientId, String text, MultipartFile image, MultipartFile video,
+    public void produceMessage(Long senderId, Long recipientId,Long chatId, String text, MultipartFile image, MultipartFile video,
                                MultipartFile audio, MultipartFile voice) throws InterruptedException {
         String textMessage = LinksyTools.clearQuotes(text);
         if (textMessage.isEmpty()) textMessage=null;
@@ -131,7 +131,7 @@ public class MediaService {
             byte[] voiceBytes = getFileBytes(voice);
             voiceUrl = uploadResources(voiceBytes,uploadVoiceDir,".mp3");
         }
-        sendMessageResponse(new MessageKafkaResponse(senderId,recipientId,textMessage,imageUrl,videoUrl,audioUrl,voiceUrl));
+        sendMessageResponse(new MessageKafkaResponse(senderId,recipientId,chatId,textMessage,imageUrl,videoUrl,audioUrl,voiceUrl));
     }
 
     public void produceMoment(Long id, MultipartFile image, MultipartFile video,

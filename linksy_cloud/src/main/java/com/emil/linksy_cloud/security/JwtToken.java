@@ -25,26 +25,10 @@ public class JwtToken {
                 .compact();
     }
 
-    public String generateRefreshToken(String userId) {
-        return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
-                .signWith(SignatureAlgorithm.HS512, jwtSecretRefresh)
-                .compact();
-    }
 
     public boolean validateAccessToken(String token) {
         try {
             Jwts.parser().setSigningKey(jwtSecretAccess).build().parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    public boolean validateRefreshToken(String token) {
-        try {
-            Jwts.parser().setSigningKey(jwtSecretRefresh).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             return false;
@@ -63,10 +47,4 @@ public class JwtToken {
         return Long.valueOf(claims.getSubject());
     }
 
-    public boolean needsRefreshRenewal(String refreshToken) {
-        Claims claims = Jwts.parser().setSigningKey(jwtSecretRefresh).build().parseClaimsJws(refreshToken).getBody();
-        Date expirationDate = claims.getExpiration();
-        long timeRemaining = expirationDate.getTime() - System.currentTimeMillis();
-        return timeRemaining <= refreshRenewalThreshold;
-    }
 }

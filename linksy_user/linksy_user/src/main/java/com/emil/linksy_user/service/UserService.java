@@ -104,16 +104,19 @@ public class UserService {
     }
 
     public Token refreshAccessToken(String refreshToken) {
-        if (!jwtToken.validateRefreshToken(refreshToken)) {
+        if (!jwtToken.validateRefreshToken(refreshToken))
             throw new InvalidTokenException("Invalid refresh token");
-        }
-        String userId = String.valueOf(jwtToken.extractUserId(refreshToken, TokenType.REFRESH));
-        userRepository.findById(Long.parseLong(userId))
+
+         Long userId = jwtToken.extractUserId(refreshToken, TokenType.REFRESH);
+         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        String newAccessToken = jwtToken.generateAccessToken(userId);
+         if (!user.getToken().equals(refreshToken)) throw new InvalidTokenException("Invalid refresh token");
+        String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
         String newRefreshToken = refreshToken;
         if (jwtToken.needsRefreshRenewal(refreshToken)) {
-            newRefreshToken = jwtToken.generateRefreshToken(userId);
+            newRefreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
+            user.setToken(newRefreshToken);
+            userRepository.save(user);
         }
 
         return new Token(newAccessToken, newRefreshToken);

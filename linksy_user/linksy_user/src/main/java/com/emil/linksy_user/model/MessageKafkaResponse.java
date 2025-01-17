@@ -12,6 +12,7 @@ import lombok.Setter;
 public class MessageKafkaResponse {
     private Long senderId;
     private Long recipientId;
+    private Long chatId;
     private String text;
     private String imageUrl;
     private String videoUrl;
