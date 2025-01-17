@@ -10,6 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PostKafkaResponse {
     private Long authorId;
+    private Long postId;
     private String text;
     private String imageUrl;
     private String videoUrl;

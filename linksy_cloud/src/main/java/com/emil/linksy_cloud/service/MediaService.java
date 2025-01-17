@@ -77,14 +77,14 @@ public class MediaService {
 
 
 
-    public void producePost(Long id, String text, MultipartFile image, MultipartFile video,
-                            MultipartFile audio, MultipartFile voice) {
+    public void producePost(Long id,Long postId, String text, MultipartFile image, MultipartFile video,
+                            MultipartFile audio, MultipartFile voice,String oldImageUrl,String oldVideoUrl,String oldAudioUrl,String oldVoiceUrl) {
         String textPost = LinksyTools.clearQuotes(text);
         if (textPost.isEmpty()) textPost=null;
-        String imageUrl = null;
-        String videoUrl= null;
-        String audioUrl= null;
-        String voiceUrl= null;
+        String imageUrl= oldImageUrl==null ? null : LinksyTools.clearQuotes(oldImageUrl);
+        String videoUrl= oldVideoUrl==null ? null :             LinksyTools.clearQuotes(oldVideoUrl);
+        String audioUrl= oldAudioUrl==null ? null :LinksyTools.clearQuotes(oldAudioUrl);
+        String voiceUrl= oldVoiceUrl==null ? null :LinksyTools.clearQuotes(oldVoiceUrl);
 
         if (image!=null) {
             byte[] imageBytes = getFileBytes(image);
@@ -102,7 +102,7 @@ public class MediaService {
             byte[] voiceBytes = getFileBytes(voice);
             voiceUrl = uploadResources(voiceBytes,uploadVoiceDir,".mp3");
         }
-        sendPostResponse(new PostKafkaResponse(id,textPost,imageUrl,videoUrl,audioUrl,voiceUrl));
+        sendPostResponse(new PostKafkaResponse(id,postId,textPost,imageUrl,videoUrl,audioUrl,voiceUrl));
     }
 
 

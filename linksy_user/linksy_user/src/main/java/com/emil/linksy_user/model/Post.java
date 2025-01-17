@@ -36,4 +36,5 @@ public class Post {
     private String audioUrl;
     @Column(name = "voice_url")
     private String voiceUrl;
+    private Boolean edited;
 }

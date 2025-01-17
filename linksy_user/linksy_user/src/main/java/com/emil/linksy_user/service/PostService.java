@@ -30,15 +30,29 @@ public class PostService {
         Long authorId = response.getAuthorId();
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        Post newPost = new Post();
-        newPost.setUser(author);
-        newPost.setText(response.getText());
-        newPost.setImageUrl(response.getImageUrl());
-        newPost.setVideoUrl(response.getVideoUrl());
-        newPost.setAudioUrl(response.getAudioUrl());
-        newPost.setVoiceUrl(response.getVoiceUrl());
-        newPost.setReposts(0L);
-        postRepository.save(newPost);
+        if (response.getPostId()==null) {
+            Post newPost = new Post();
+            newPost.setUser(author);
+            newPost.setText(response.getText());
+            newPost.setImageUrl(response.getImageUrl());
+            newPost.setVideoUrl(response.getVideoUrl());
+            newPost.setAudioUrl(response.getAudioUrl());
+            newPost.setVoiceUrl(response.getVoiceUrl());
+            newPost.setEdited(false);
+            newPost.setReposts(0L);
+            postRepository.save(newPost);
+        }else{
+            Post editPost = postRepository.findById(response.getPostId())
+                    .orElseThrow(() -> new NotFoundException("Post not found"));
+            if (!editPost.getUser().getId().equals(authorId))  throw new SecurityException("User does not own the post");
+            editPost.setText(response.getText());
+            editPost.setImageUrl(response.getImageUrl());
+            editPost.setVideoUrl(response.getVideoUrl());
+            editPost.setAudioUrl(response.getAudioUrl());
+            editPost.setVoiceUrl(response.getVoiceUrl());
+            editPost.setEdited(true);
+            postRepository.save(editPost);
+        }
     }
 
 
@@ -48,13 +62,14 @@ public class PostService {
 
         List<Post> posts = postRepository.findByUser(user);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
         return posts.stream()
                 .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
                 .map(post ->{
                         Long likesCount = userPostLikeRepository.countByPost(post);
                         Long commentsCount = userPostCommentRepository.countByPost(post);
                         Boolean isLikedIt = userPostLikeRepository.existsByPostAndUser(post,user);
+                        Boolean edited = post.getEdited();
                        return new PostResponse(
                         post.getId(),
                         user.getUsername(),
@@ -67,7 +82,7 @@ public class PostService {
                         dateFormat.format(post.getPublicationTime()),
                                likesCount,
                         commentsCount,
-                        post.getReposts(), isLikedIt
+                        post.getReposts(), isLikedIt,edited
 
                 );}).toList();
     }
@@ -83,13 +98,14 @@ public class PostService {
 
         List<Post> posts = postRepository.findByUser(user);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
         return posts.stream()
                 .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
                 .map(post ->{
                     Long likesCount = userPostLikeRepository.countByPost(post);
                     Long commentsCount = userPostCommentRepository.countByPost(post);
                     Boolean isLikedIt = userPostLikeRepository.existsByPostAndUser(post,finder);
+                    Boolean edited = post.getEdited();
                     return new PostResponse(
                             post.getId(),
                             user.getUsername(),
@@ -102,7 +118,7 @@ public class PostService {
                             dateFormat.format(post.getPublicationTime()),
                             likesCount,
                             commentsCount,
-                            post.getReposts(), isLikedIt
+                            post.getReposts(), isLikedIt,edited
 
                     );}).toList();
     }
