@@ -96,7 +96,8 @@ public class UserService {
                 .map(user -> {
                     String accessToken = jwtToken.generateAccessToken(user.getId().toString());
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
-                    user.setToken(refreshToken);
+                    user.setAccessToken(accessToken);
+                    user.setRefreshToken(refreshToken);
                     userRepository.save(user);
                    return new Token(accessToken,refreshToken);
                 })
@@ -110,15 +111,16 @@ public class UserService {
          Long userId = jwtToken.extractUserId(refreshToken, TokenType.REFRESH);
          User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-         if (!user.getToken().equals(refreshToken)) throw new InvalidTokenException("Invalid refresh token");
+         if (!user.getRefreshToken().equals(refreshToken)) throw new InvalidTokenException("Invalid refresh token");
         String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
         String newRefreshToken = refreshToken;
         if (jwtToken.needsRefreshRenewal(refreshToken)) {
             newRefreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
-            user.setToken(newRefreshToken);
+            user.setRefreshToken(newRefreshToken);
             userRepository.save(user);
         }
-
+           user.setAccessToken(newAccessToken);
+        userRepository.save(user);
         return new Token(newAccessToken, newRefreshToken);
     }
 

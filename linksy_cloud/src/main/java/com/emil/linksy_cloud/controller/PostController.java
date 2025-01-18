@@ -1,6 +1,4 @@
 package com.emil.linksy_cloud.controller;
-
-
 import com.emil.linksy_cloud.service.MediaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +13,7 @@ public class PostController {
     public PostController(MediaService mediaService) {
         this.mediaService = mediaService;
     }
+
     @PostMapping("/cu")
     public ResponseEntity<Void> createOrUpdatePost(
                                                    @RequestParam(value ="id",required = false) Long postId,

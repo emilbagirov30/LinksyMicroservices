@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -45,9 +44,11 @@ public class User {
 
     @Column(name = "avatar_url")
     private String avatarUrl;
-
     private String link;
-    private String token;
+    @Column(name = "refresh_token")
+    private String RefreshToken;
+    @Column(name = "access_token")
+    private String AccessToken;
     @Temporal(TemporalType.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
     private Date birthday;
