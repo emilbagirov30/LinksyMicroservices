@@ -8,11 +8,14 @@ import com.emil.linksy_user.repository.MessageRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,7 @@ public class ChatService {
     private final ChatMemberRepository chatMemberRepository;
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     public Chat findOrCreatePersonalChat(User user1, User user2) {
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> createNewChat(user1, user2));
@@ -57,18 +61,14 @@ public class ChatService {
           var userMessages =  messageRepository.findByChat(chat).stream()
                   .sorted(Comparator.comparing(Message::getDate)).toList();
           Message lastMessage = null;
-          String lastMessageText;
-          String dateLast;
+          String lastMessageText="";
+          String dateLast="";
           SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
           if (!userMessages.isEmpty()) {
               lastMessage = userMessages.get(userMessages.size()-1);
-              lastMessageText = lastMessage.getText();
+              if(lastMessage.getText()!=null) lastMessageText = lastMessage.getText();
               dateLast = dateFormat.format (lastMessage.getDate());
-          }else{
-              lastMessageText = "";
-              dateLast = "new";
           }
-
 
           String avatarUrl;
           String displayName;
@@ -92,6 +92,56 @@ public class ChatService {
 
     }
 
+
+    public void sendNewChat (Long chatId){
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        var chatMembers = chatMemberRepository.findByChat(chat);
+        List<User> users = chatMembers.stream()
+                .map(ChatMember::getUser)
+                .toList();
+        var userMessages =  messageRepository.findByChat(chat).stream().toList();
+        String avatarUrl;
+        String displayName;
+        Message lastMessage = null;
+        String lastMessageText="";
+        String dateLast="";
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("HH:mm");
+        if (!userMessages.isEmpty()) {
+            lastMessage = userMessages.get(userMessages.size()-1);
+            if(lastMessage.getText()!=null) lastMessageText = lastMessage.getText();
+            dateLast = dateFormat.format(LocalDateTime.now());
+        }
+
+        if (chat.getIsGroup()){
+            avatarUrl = chat.getAvatarUrl();
+            displayName = chat.getName();
+            var response = new ChatResponse(chat.getId(),null,true,avatarUrl,displayName,lastMessageText,dateLast);
+            for (User user : users) {
+                messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/chats/", response);
+            }
+        }else {
+            List<User> members = chatMembers.stream()
+                    .map(ChatMember::getUser)
+                    .toList();
+            var member1 = members.get(0);
+            var member2 = members.get(1);
+
+            var response1 = new ChatResponse(chat.getId(), member2.getId(), false, member2.getAvatarUrl(),
+                    member2.getUsername(), lastMessageText,dateLast);
+            var response2 = new ChatResponse(chat.getId(), member1.getId(), false, member1.getAvatarUrl(),
+                    member1.getUsername(), lastMessageText,dateLast);
+                messagingTemplate.convertAndSendToUser(member1.getAccessToken(), "/queue/chats/", response1);
+               messagingTemplate.convertAndSendToUser(member2.getAccessToken(), "/queue/chats/", response2);
+
+        }
+    }
+
+
+
+
+
+
     public Long getChatId(Long user1Id, Long user2Id) {
         User user1 = userRepository.findById(user1Id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -109,10 +159,26 @@ public class ChatService {
         List<Chat> nonGroupChats = chats.stream()
                 .filter(chat -> !chat.getIsGroup())
                 .toList();
-        if (!nonGroupChats.isEmpty()) {
-            var id = nonGroupChats.get(0).getId();
-            return id;
-        }else return -100L;
+        if (!nonGroupChats.isEmpty())
+            return nonGroupChats.get(0).getId();
+        else{
+            Chat chat = new Chat ();
+            chat.setIsGroup(false);
+            chatRepository.save(chat);
+
+
+            ChatMember chatMember = new ChatMember();
+            chatMember.setChat(chat);
+            chatMember.setUser(user1);
+            chatMemberRepository.save(chatMember);
+
+            ChatMember chatMember2 = new ChatMember();
+            chatMember2.setChat(chat);
+            chatMember2.setUser(user2);
+            chatMemberRepository.save(chatMember2);
+
+            return chat.getId();
+        }
     }
 
 
@@ -132,25 +198,15 @@ public class ChatService {
         return members.stream()
                 .map(member -> {
                     User user = member.getUser();
-                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink());
+                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(),user.getOnline(),user.getConfirmed());
                 })
                 .toList();
     }
 
 
 
-
-
-
-
-
-
-
-
-
-
-
     @KafkaListener(topics = "groupResponse", groupId = "group_id_group", containerFactory = "groupKafkaResponseKafkaListenerContainerFactory")
+    @Transactional
      public void consumeGroup(GroupKafkaResponse response) {
         Chat chat = new Chat();
         chat.setIsGroup(true);
@@ -172,6 +228,7 @@ public class ChatService {
             chatMembers.add(chatMember);
         }
         chatMemberRepository.saveAll(chatMembers);
+        sendNewChat(chat.getId());
 
     }
 

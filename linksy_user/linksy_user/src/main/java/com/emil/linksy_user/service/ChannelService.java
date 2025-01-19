@@ -173,7 +173,7 @@ public class ChannelService {
 
        return candidates.stream().map(candidate ->{
            User user = candidate.getUser();
-           return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink());
+           return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(),user.getOnline(),user.getConfirmed());
        }).toList();
    }
 
@@ -319,7 +319,7 @@ public class ChannelService {
         return members.stream()
                 .map(member -> {
                     User user = member.getUser();
-                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink());
+                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(),user.getOnline(),user.getConfirmed());
                 })
                 .toList();
     }

@@ -19,4 +19,5 @@ public class MessageResponse {
     private String audioUrl;
     private String voiceUrl;
     private String date;
+    private Boolean viewed;
 }

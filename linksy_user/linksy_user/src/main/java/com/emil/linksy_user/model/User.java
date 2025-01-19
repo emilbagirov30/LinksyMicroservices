@@ -57,4 +57,8 @@ public class User {
     @NotNull
     @Enumerated(EnumType.STRING)
     MessageMode messageMode;
+    private Boolean online;
+    private Boolean confirmed;
+    private Boolean blocked;
+    private Boolean deleted;
 }

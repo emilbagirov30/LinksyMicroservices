@@ -4,10 +4,7 @@ import com.emil.linksy_user.model.MessageResponse;
 import com.emil.linksy_user.service.MessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -33,5 +30,11 @@ public class MessageController {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         var messages = messageService.getUserMessagesByChat(userId,chatId);
         return ResponseEntity.ok(messages);
+    }
+    @PutMapping("/viewed/chat/{chatId}")
+    public ResponseEntity<Void> setViewed(@PathVariable("chatId")Long chatId)  {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        messageService.setViewed(userId,chatId);
+        return ResponseEntity.ok().build();
     }
 }

@@ -12,4 +12,6 @@ public class UserResponse {
     private String avatarUrl;
     private String username;
     private String link;
+    private Boolean online;
+    private Boolean confirmed;
 }

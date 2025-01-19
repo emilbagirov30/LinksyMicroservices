@@ -41,7 +41,7 @@ public class PeopleService {
                         user.getId(),
                         user.getAvatarUrl(),
                         user.getUsername(),
-                        user.getLink()
+                        user.getLink(),user.getOnline(),user.getConfirmed()
                 ))
                 .collect(Collectors.toList());
     }
@@ -160,7 +160,7 @@ public class PeopleService {
         var blacklists = blackListRepository.findByInitiator(user);
         return blacklists.stream().map(blackList -> {
             User blocked = blackList.getBlocked();
-            return new UserResponse(blocked.getId(), blocked.getAvatarUrl(), blocked.getUsername(), blocked.getLink());
+            return new UserResponse(blocked.getId(), blocked.getAvatarUrl(), blocked.getUsername(), blocked.getLink(),blocked.getOnline(),blocked.getConfirmed());
         }).toList();
 
     }

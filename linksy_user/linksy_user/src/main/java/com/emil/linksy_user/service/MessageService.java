@@ -15,12 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,6 +48,7 @@ public class MessageService {
         message.setVideoUrl(response.getVideoUrl());
         message.setAudioUrl(response.getAudioUrl());
         message.setVoiceUrl(response.getVoiceUrl());
+        message.setViewed(false);
         Chat chat;
         if(chatId==null) {
             Long recipientId = response.getRecipientId();
@@ -57,7 +57,6 @@ public class MessageService {
             chat = chatService.findOrCreatePersonalChat(sender, recipient);
             message.setChat(chat);
             messageRepository.save(message);
-
         }else{
            chat = chatRepository.findById(chatId)
                     .orElseThrow(() -> new NotFoundException("Chat not found"));
@@ -68,19 +67,19 @@ public class MessageService {
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("HH:mm");
       sendMessage(chat,new MessageResponse(message.getId(), sender.getId(),chat.getId(),
              response.getText(),response.getImageUrl(),response.getVideoUrl(),
-              response.getAudioUrl(),response.getVoiceUrl(), dateFormat.format(LocalDateTime.now())));
+              response.getAudioUrl(),response.getVoiceUrl(), dateFormat.format(LocalDateTime.now()),false));
+
+
     }
 
     private void sendMessage (Chat chat,MessageResponse response){
-        User sender = userRepository.findById(response.getSenderId())
-                .orElseThrow(() -> new NotFoundException("User not found"));
         var members =  chatMemberRepository.findByChat(chat);
         var users =members.stream().map(ChatMember::getUser).distinct().toList();
         users.forEach( user -> {
-            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages" + "/" + chat.getId() + "/", response);
+            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/" +  chat.getId() + "/", response);
                 }
         );
-
+        chatService.sendNewChat(chat.getId());
     }
 
     public List<MessageResponse> getUserMessages(Long userId){
@@ -103,8 +102,9 @@ public class MessageService {
                         message.getVideoUrl(),
                         message.getAudioUrl(),
                         message.getVoiceUrl(),
-                        dateFormat.format(message.getDate()
-                        )
+                        dateFormat.format(message.getDate()),
+                        message.getViewed()
+
                 ))
                 .collect(Collectors.toList());
     }
@@ -131,10 +131,23 @@ public class MessageService {
                         message.getVideoUrl(),
                         message.getAudioUrl(),
                         message.getVoiceUrl(),
-                        dateFormat.format(message.getDate()
-                        )
+                        dateFormat.format(message.getDate()),
+                        message.getViewed()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public void setViewed (Long userId,Long chatId){
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        var messages =  messageRepository.findByChat(chat);
+       var filterMessages = messages.stream().filter( message -> !message.getSender().getId().equals(userId) && !message.getViewed()).toList();
+        filterMessages.forEach(message -> message.setViewed(true));
+        messageRepository.saveAll(filterMessages);
+
+        for (Message m : filterMessages) {
+          messagingTemplate.convertAndSendToUser(m.getSender().getAccessToken(), "/queue/messages/viewed/" + chatId + "/", m.getId());
+   }
     }
 
 }
