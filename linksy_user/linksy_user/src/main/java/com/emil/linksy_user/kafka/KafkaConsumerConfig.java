@@ -166,4 +166,25 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(channelPostKafkaResponseConsumerFactory());
         return factory;
     }
+
+
+
+    @Bean
+    public ConsumerFactory<String, GroupEditDataKafkaResponse> groupEditKafkaResponseConsumerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "group_id_group_edit");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(),
+                new ErrorHandlingDeserializer<>(new JsonDeserializer<>(GroupEditDataKafkaResponse.class, false)));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, GroupEditDataKafkaResponse> groupEditKafkaResponseKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, GroupEditDataKafkaResponse> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(groupEditKafkaResponseConsumerFactory());
+        return factory;
+    }
 }

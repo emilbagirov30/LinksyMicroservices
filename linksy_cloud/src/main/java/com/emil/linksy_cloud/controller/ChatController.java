@@ -33,4 +33,15 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
+
+    @PutMapping("/edit/group")
+    public ResponseEntity<Void> editGroup(   @RequestParam("id")Long groupId,
+                                             @RequestParam(value = "name",required = false) String name,
+                                             @RequestParam(value ="oldAvatarUrl",required = false) String oldAvatarUrl,
+                                             @RequestParam(value = "image", required = false) MultipartFile image){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        mediaService.produceEditGroup(userId,groupId,oldAvatarUrl, image, name);
+        return ResponseEntity.ok().build();
+    }
+
 }

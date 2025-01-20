@@ -227,6 +227,14 @@ public class ChatService {
     }
 
 
+    public GroupResponse getGroupData (Long userId, Long chatId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+            return new GroupResponse(chat.getName(), chat.getAvatarUrl());
+    }
+
 
     @KafkaListener(topics = "groupResponse", groupId = "group_id_group", containerFactory = "groupKafkaResponseKafkaListenerContainerFactory")
     @Transactional
@@ -252,6 +260,25 @@ public class ChatService {
         }
         chatMemberRepository.saveAll(chatMembers);
         sendNewChat(chat.getId());
+
+    }
+
+
+
+
+
+
+
+    @KafkaListener(topics = "groupEditResponse", groupId = "group_id_group_edit", containerFactory = "groupEditKafkaResponseKafkaListenerContainerFactory")
+    @Transactional
+    public void consumeGroupEdit(GroupEditDataKafkaResponse response) {
+        User user = userRepository.findById(response.getUserId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Chat chat = chatRepository.findById(response.getGroupId())
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        chat.setName(response.getName());
+        chat.setAvatarUrl(response.getAvatarUrl());
+        chatRepository.save(chat);
 
     }
 

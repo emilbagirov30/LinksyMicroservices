@@ -102,4 +102,15 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(producerChannelPostFactory());
 
     }
+
+    @Bean
+    public ProducerFactory<String,GroupEditDataKafkaResponse> producerCGroupEditFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
+
+    @Bean
+    public KafkaTemplate<String, GroupEditDataKafkaResponse> kafkaGroupEditTemplate() {
+        return new KafkaTemplate<>(producerCGroupEditFactory());
+
+    }
 }

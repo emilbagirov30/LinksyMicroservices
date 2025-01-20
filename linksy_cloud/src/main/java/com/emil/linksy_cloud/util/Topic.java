@@ -14,7 +14,8 @@ public enum Topic {
     MOMENT_RESPONSE("momentResponse"),
     CHANNEL_RESPONSE("channelResponse"),
     CHANNEL_POST_RESPONSE("channelPostResponse"),
-    GROUP_RESPONSE("groupResponse");
+    GROUP_RESPONSE("groupResponse"),
+    GROUP_EDIT_RESPONSE("groupEditResponse");
     private final String topic;
 
     Topic(String topic) {

@@ -37,6 +37,7 @@ public class MediaService {
     private final KafkaTemplate<String, GroupKafkaResponse> kafkaGroupTemplate;
     private final KafkaTemplate<String, ChannelKafkaResponse> kafkaChannelTemplate;
     private final KafkaTemplate<String, ChannelPostKafkaResponse> kafkaChannelPostTemplate;
+    private final KafkaTemplate<String, GroupEditDataKafkaResponse> kafkaGroupEditTemplate;
     public void produceAvatar(Long id, MultipartFile file) {
          byte[] fileBytes = getFileBytes(file);
          String avatarUrl = uploadResources(fileBytes,uploadImageDir,".png");
@@ -54,6 +55,17 @@ public class MediaService {
         sendGroupResponse(new GroupKafkaResponse(participantIds,avatarUrl,name.substring(1,name.length()-1)));
     }
 
+
+
+    public void produceEditGroup(Long userId,Long groupId, String oldAvatarUrl,MultipartFile avatar, String name) {
+
+        String avatarUrl = oldAvatarUrl==null ? "null" : LinksyTools.clearQuotes(oldAvatarUrl);
+        if (avatar!=null) {
+            byte[] fileBytes = getFileBytes(avatar);
+            avatarUrl = uploadResources(fileBytes, uploadImageDir, ".png");
+        }
+        sendGroupEditResponse(new GroupEditDataKafkaResponse(userId,groupId,LinksyTools.clearQuotes(name),avatarUrl));
+    }
 
 
 
@@ -232,6 +244,9 @@ public class MediaService {
     }
     public void sendChannelPostResponse (ChannelPostKafkaResponse response){
         kafkaChannelPostTemplate.send(Topic.CHANNEL_POST_RESPONSE.getTopic(),response);
+    }
+    public void sendGroupEditResponse (GroupEditDataKafkaResponse response){
+       kafkaGroupEditTemplate.send(Topic.GROUP_EDIT_RESPONSE.getTopic(),response);
     }
 
 private byte [] getFileBytes (MultipartFile file){

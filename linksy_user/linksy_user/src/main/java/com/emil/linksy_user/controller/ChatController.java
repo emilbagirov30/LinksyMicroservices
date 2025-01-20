@@ -1,6 +1,7 @@
 package com.emil.linksy_user.controller;
 
 import com.emil.linksy_user.model.ChatResponse;
+import com.emil.linksy_user.model.GroupResponse;
 import com.emil.linksy_user.model.UserResponse;
 import com.emil.linksy_user.service.ChatService;
 import org.springframework.http.ResponseEntity;
@@ -38,4 +39,11 @@ public class ChatController {
         return ResponseEntity.ok(result);
     }
 
+
+    @GetMapping("/group/data/{id}")
+    public ResponseEntity<GroupResponse> getGroupData(@PathVariable("id") Long chatId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var result = chatService.getGroupData(userId,chatId);
+        return ResponseEntity.ok(result);
+    }
 }
