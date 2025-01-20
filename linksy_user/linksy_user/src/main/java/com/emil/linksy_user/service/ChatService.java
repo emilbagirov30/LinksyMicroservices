@@ -61,13 +61,20 @@ public class ChatService {
           var userMessages =  messageRepository.findByChat(chat).stream()
                   .sorted(Comparator.comparing(Message::getDate)).toList();
           Message lastMessage = null;
+          Long senderId = null;
           String lastMessageText="";
           String dateLast="";
+          Long unreadMessagesCount = null;
           SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
           if (!userMessages.isEmpty()) {
+             unreadMessagesCount = userMessages.stream()
+                      .filter(message -> !message.getViewed() && !message.getSender().getId().equals(userId))
+                      .count();
               lastMessage = userMessages.get(userMessages.size()-1);
               if(lastMessage.getText()!=null) lastMessageText = lastMessage.getText();
+              senderId = lastMessage.getSender().getId();
               dateLast = dateFormat.format (lastMessage.getDate());
+
           }
 
           String avatarUrl;
@@ -87,7 +94,7 @@ public class ChatService {
               displayName = companion.getUsername();
               companionId = companion.getId();
           }
-        return new ChatResponse(chat.getId(),companionId,isGroup,avatarUrl,displayName,lastMessageText,dateLast);
+        return new ChatResponse(chat.getId(),companionId,senderId,isGroup,avatarUrl,displayName,lastMessageText,dateLast,unreadMessagesCount);
         }).collect(Collectors.toList());
 
     }
@@ -103,21 +110,30 @@ public class ChatService {
         var userMessages =  messageRepository.findByChat(chat).stream().toList();
         String avatarUrl;
         String displayName;
-        Message lastMessage = null;
+        Message lastMessage;
         String lastMessageText="";
         String dateLast="";
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("HH:mm");
+        Long senderId = null;
+        Long unreadMessagesCount = null;
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM HH:mm");
         if (!userMessages.isEmpty()) {
+
             lastMessage = userMessages.get(userMessages.size()-1);
             if(lastMessage.getText()!=null) lastMessageText = lastMessage.getText();
             dateLast = dateFormat.format(LocalDateTime.now());
+            senderId = lastMessage.getSender().getId();
         }
 
         if (chat.getIsGroup()){
             avatarUrl = chat.getAvatarUrl();
             displayName = chat.getName();
-            var response = new ChatResponse(chat.getId(),null,true,avatarUrl,displayName,lastMessageText,dateLast);
+
+            var response = new ChatResponse(chat.getId(),null,senderId,true,avatarUrl,displayName,lastMessageText,dateLast, unreadMessagesCount);
             for (User user : users) {
+                unreadMessagesCount = userMessages.stream()
+                        .filter(message -> !message.getViewed() && !message.getSender().getId().equals(user.getId()))
+                        .count();
+                response.setUnreadMessagesCount(unreadMessagesCount);
                 messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/chats/", response);
             }
         }else {
@@ -126,13 +142,20 @@ public class ChatService {
                     .toList();
             var member1 = members.get(0);
             var member2 = members.get(1);
-
-            var response1 = new ChatResponse(chat.getId(), member2.getId(), false, member2.getAvatarUrl(),
-                    member2.getUsername(), lastMessageText,dateLast);
-            var response2 = new ChatResponse(chat.getId(), member1.getId(), false, member1.getAvatarUrl(),
-                    member1.getUsername(), lastMessageText,dateLast);
+            var unreadMessagesCount1 = userMessages.stream()
+                    .filter(message -> !message.getViewed() && !message.getSender().getId().equals(member1.getId()))
+                    .count();
+            var unreadMessagesCount2 = userMessages.stream()
+                    .filter(message -> !message.getViewed() && !message.getSender().getId().equals(member2.getId()))
+                    .count();
+            var response1 = new ChatResponse(chat.getId(), member2.getId(), senderId,false, member2.getAvatarUrl(),
+                    member2.getUsername(), lastMessageText,dateLast,unreadMessagesCount1);
+            var response2 = new ChatResponse(chat.getId(), member1.getId(),senderId, false, member1.getAvatarUrl(),
+                    member1.getUsername(), lastMessageText,dateLast,unreadMessagesCount2);
+                messagingTemplate.convertAndSendToUser(member1.getAccessToken(), "/queue/count/", response1);
+                messagingTemplate.convertAndSendToUser(member2.getAccessToken(), "/queue/count/", response2);
                 messagingTemplate.convertAndSendToUser(member1.getAccessToken(), "/queue/chats/", response1);
-               messagingTemplate.convertAndSendToUser(member2.getAccessToken(), "/queue/chats/", response2);
+                messagingTemplate.convertAndSendToUser(member2.getAccessToken(), "/queue/chats/", response2);
 
         }
     }

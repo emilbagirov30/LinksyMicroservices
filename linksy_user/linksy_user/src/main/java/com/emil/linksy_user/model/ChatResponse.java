@@ -10,9 +10,11 @@ import lombok.NoArgsConstructor;
 public class ChatResponse {
     private Long chatId;
     private Long companionId;
+    private Long senderId;
     private Boolean isGroup;
     private String avatarUrl;
     private String displayName;
     private String lastMessage;
     private String dateLast;
+    private Long unreadMessagesCount;
 }
