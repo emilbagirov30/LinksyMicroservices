@@ -22,33 +22,39 @@ public class ChannelController {
         this.mediaService = mediaService;
     }
 
-    @PostMapping("/create")
+    @PostMapping("/cu")
     public ResponseEntity<Void> createChannel(@RequestParam("name") String name,
+                                              @RequestParam(value = "channelId", required = false) Long channelId,
                                               @RequestParam("link") String link,
                                               @RequestParam("description") String description,
                                               @RequestParam("type") String type,
+                                              @RequestParam(value = "oldAvatarUrl", required = false) String oldAvatarUrl,
                                               @RequestParam(value = "image", required = false) MultipartFile avatar) {
 
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         ChannelType channelType =  (LinksyTools.clearQuotes(type).equals("PRIVATE")) ? ChannelType.PRIVATE : ChannelType.PUBLIC;
-        mediaService.produceChannel(ownerId, name, link, description, channelType, avatar);
+        mediaService.produceChannel(ownerId, channelId,name, link, description, channelType,oldAvatarUrl, avatar);
         return ResponseEntity.ok().build();
     }
 
 
 
-    @PostMapping("/create_post")
-    public ResponseEntity<Void> createPost(  @RequestParam("id") Long channelId,
-                                             @RequestParam("text") String text,
+    @PostMapping("/cu/post")
+    public ResponseEntity<Void> createOrUpdatePost(  @RequestParam("channelId") Long channelId,
+                                                     @RequestParam(value ="text",required = false) String text,
+                                             @RequestParam(value ="postId",required = false) Long postId,
+                                             @RequestParam(value = "imageUrl",required = false) String imageUrl,
+                                             @RequestParam(value ="videoUrl",required = false) String videoUrl,
+                                             @RequestParam(value ="audioUrl",required = false) String audioUrl,
                                              @RequestParam(value = "image", required = false) MultipartFile image,
                                              @RequestParam(value = "video", required = false) MultipartFile video,
                                              @RequestParam(value = "audio", required = false) MultipartFile audio,
-                                             @RequestParam("title") String pollTitle,
+                                             @RequestParam(value = "title", required = false) String pollTitle,
                                              @RequestParam(value = "options", required = false) List<String> options
     ) {
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        mediaService.produceChannelPost(ownerId,channelId,text,image,video,audio,pollTitle,options);
+        mediaService.produceChannelPost(ownerId,channelId,text,image,video,audio,pollTitle,options,postId,imageUrl,videoUrl,audioUrl);
         return ResponseEntity.ok().build();
     }
 

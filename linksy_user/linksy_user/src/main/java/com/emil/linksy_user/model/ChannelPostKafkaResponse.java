@@ -18,4 +18,5 @@ public class ChannelPostKafkaResponse {
     private String audioUrl;
     private String pollTitle;
     private List<String> options;
+    private Long postId;
 }

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChannelKafkaResponse {
     private  Long ownerId;
+    private Long channelId;
     private String name;
     private String link;
     private String description;

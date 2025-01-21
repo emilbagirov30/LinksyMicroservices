@@ -3,6 +3,7 @@ package com.emil.linksy_user.service;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
+import com.emil.linksy_user.util.ChannelType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,16 +29,17 @@ public class ChannelService {
     private final VoterRepository voterRepository;
     @KafkaListener(topics = "channelResponse", groupId = "group_id_channel", containerFactory = "channelKafkaResponseKafkaListenerContainerFactory")
     public void consumeChannel(ChannelKafkaResponse response) {
+        if(response.getChannelId()==null) {
             User owner = userRepository.findById(response.getOwnerId())
                     .orElseThrow(() -> new NotFoundException("User not found"));
             Channel channel = new Channel();
             channel.setOwner(owner);
             channel.setName(response.getName());
-        if (channelRepository.existsByLink(response.getLink())) {
-            channel.setLink(null);
-        }else {
-            channel.setLink(response.getLink());
-        }
+            if (channelRepository.existsByLink(response.getLink())) {
+                channel.setLink(null);
+            } else {
+                channel.setLink(response.getLink());
+            }
             channel.setAvatarUrl(response.getAvatarUrl());
             channel.setDescription(response.getDescription());
             channel.setType(response.getType());
@@ -46,6 +48,20 @@ public class ChannelService {
             channelMember.setChannel(channel);
             channelMember.setUser(owner);
             channelMemberRepository.save(channelMember);
+        }else {
+            Channel channel = channelRepository.findById(response.getChannelId())
+                    .orElseThrow(() -> new NotFoundException("Channel not found"));
+            channel.setName(response.getName());
+            if (channelRepository.existsByLinkAndNotId(response.getLink(), response.getChannelId())) {
+                channel.setLink(null);
+            } else {
+                channel.setLink(response.getLink());
+            }
+            channel.setAvatarUrl(response.getAvatarUrl());
+            channel.setDescription(response.getDescription());
+            channel.setType(response.getType());
+            channelRepository.save(channel);
+        }
     }
 
 
@@ -211,33 +227,64 @@ public class ChannelService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(response.getChannelId())
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
-        if (!channel.getOwner().getId().equals(owner.getId())) throw new SecurityException("User is not the owner channel");
 
-        ChannelPost channelPost = new ChannelPost();
-        channelPost.setChannel(channel);
-        channelPost.setText(response.getText());
-        channelPost.setImageUrl(response.getImageUrl());
-        channelPost.setVideoUrl(response.getVideoUrl());
-        channelPost.setReposts(0L);
-                   if(response.getOptions()!=null) {
-                       if (!response.getOptions().isEmpty()) {
-                           Poll poll = new Poll();
-                           poll.setTitle(response.getPollTitle());
-                           pollRepository.save(poll);
-                           channelPost.setPoll(poll);
-                           var options = response.getOptions();
-                           for (String option : options) {
-                               PollOptions pollOptions = new PollOptions();
-                               pollOptions.setPoll(poll);
-                               pollOptions.setOption(option);
-                               pollOptions.setSelectedCount(0L);
-                               pollOptionsRepository.save(pollOptions);
-                           }
-                       }
-                   }
-        channelPostRepository.save(channelPost);
+        if (response.getPostId()==null) {
+
+            if (!channel.getOwner().getId().equals(owner.getId()))
+                throw new SecurityException("User is not the owner channel");
+
+            ChannelPost channelPost = new ChannelPost();
+            channelPost.setChannel(channel);
+            channelPost.setEdited(false);
+            channelPost.setText(response.getText());
+            channelPost.setImageUrl(response.getImageUrl());
+            channelPost.setVideoUrl(response.getVideoUrl());
+            channelPost.setReposts(0L);
+            if (response.getOptions() != null) {
+                if (!response.getOptions().isEmpty()) {
+                    Poll poll = new Poll();
+                    poll.setTitle(response.getPollTitle());
+                    pollRepository.save(poll);
+                    channelPost.setPoll(poll);
+                    var options = response.getOptions();
+                    for (String option : options) {
+                        PollOptions pollOptions = new PollOptions();
+                        pollOptions.setPoll(poll);
+                        pollOptions.setOption(option);
+                        pollOptions.setSelectedCount(0L);
+                        pollOptionsRepository.save(pollOptions);
+                    }
+                }
+            }
+            channelPostRepository.save(channelPost);
+        }else {
+            ChannelPost channelPost = channelPostRepository.findById(response.getPostId())
+                    .orElseThrow(() -> new NotFoundException("Post not found"));
+            channelPost.setChannel(channel);
+            channelPost.setText(response.getText());
+            channelPost.setImageUrl(response.getImageUrl());
+            channelPost.setEdited(true);
+            channelPost.setVideoUrl(response.getVideoUrl());
+
+                if (response.getOptions() != null) {
+                    if (!response.getOptions().isEmpty()) {
+                        Poll poll = new Poll();
+                        poll.setTitle(response.getPollTitle());
+                        pollRepository.save(poll);
+                        channelPost.setPoll(poll);
+                        var options = response.getOptions();
+                        for (String option : options) {
+                            PollOptions pollOptions = new PollOptions();
+                            pollOptions.setPoll(poll);
+                            pollOptions.setOption(option);
+                            pollOptions.setSelectedCount(0L);
+                            pollOptionsRepository.save(pollOptions);
+                        }
+                    }
+                } else channelPost.setPoll(null);
+            channelPostRepository.save(channelPost);
     }
-
+    }
 
     public List<ChannelPostResponse> getChannelsPost(Long userId, Long channelId) {
         User finder = userRepository.findById(userId)
@@ -247,7 +294,7 @@ public class ChannelService {
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         boolean isMember = channelMembers.stream()
                 .anyMatch(channelMember -> channelMember.getUser().equals(finder));
-        if (!isMember&&channel.getType().equals("PRIVATE")) {
+        if (!isMember&&channel.getType().equals(ChannelType.PRIVATE)) {
             throw new SecurityException("User is not a member of the channel");
         }
 
@@ -290,7 +337,11 @@ public class ChannelService {
                             isVoted,
                             optionResponseList,
                             Math.round(averageRating * 100.0) / 100.0,
-                            post.getReposts()
+                            post.getReposts(),
+                            post.getEdited(),
+                            post.getChannel().getOwner().getId(),
+                            0L, //временная заглушка
+                            true //временная заглушка
                     );
                 })
                 .toList();
@@ -387,5 +438,17 @@ public class ChannelService {
 
       pollOptions.setSelectedCount(++count);
       pollOptionsRepository.save(pollOptions);
+    }
+
+
+    public ChannelManagementResponse getChannelManagementData (Long userId,Long channelId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
+
+        if (!channel.getOwner().equals(user))
+            throw  new AccessDeniedException("User do not own the channel");
+        return new ChannelManagementResponse(channel.getName(), channel.getLink(), channel.getAvatarUrl(), channel.getDescription(),channel.getType());
     }
 }

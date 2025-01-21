@@ -36,4 +36,5 @@ public class ChannelPost {
     @ManyToOne
     @JoinColumn(name = "poll_id")
     private Poll poll;
+    private Boolean edited;
 }

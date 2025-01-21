@@ -124,4 +124,13 @@ private final ChannelService channelService;
         var channels = channelService.findByName(prefix);
         return ResponseEntity.ok(channels);
     }
+
+
+
+    @GetMapping("/management")
+    public ResponseEntity<ChannelManagementResponse> getChannelManagementData(@RequestParam("id") Long channelId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var response = channelService.getChannelManagementData(userId,channelId);
+        return ResponseEntity.ok(response);
+    }
 }

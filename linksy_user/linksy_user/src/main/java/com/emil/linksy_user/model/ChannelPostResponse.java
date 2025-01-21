@@ -23,5 +23,8 @@ public class ChannelPostResponse {
     private List<OptionResponse> options;
     private Double averageRating;
     private Long repostsCount;
-   // private Long commentsCount;
+    private Boolean edited;
+    private Long authorId;
+    private Long commentsCount;
+    private Boolean isAppreciated;
 }
