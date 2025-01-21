@@ -70,21 +70,19 @@ public class MediaService {
 
 
 
-    public void produceChannel(Long ownerId, String name, String link, String description, ChannelType type, MultipartFile avatar) {
+    public void produceChannel(Long ownerId, Long channelId,String name, String link, String description, ChannelType type, String oldAvatarUrl,MultipartFile avatar) {
         String channelName = LinksyTools.clearQuotes(name);
         String channelLink = LinksyTools.clearQuotes(link);
         String channelDescription = LinksyTools.clearQuotes(description);
         if (channelLink.isEmpty()) channelLink=null;
         if (channelDescription.isEmpty()) channelDescription=null;
-        String avatarUrl = "null";
+        String avatarUrl = oldAvatarUrl==null? "null" : LinksyTools.clearQuotes(oldAvatarUrl);
         if (avatar!=null) {
             byte[] fileBytes = getFileBytes(avatar);
             avatarUrl = uploadResources(fileBytes, uploadImageDir, ".png");
         }
-        sendChannelResponse(new ChannelKafkaResponse(ownerId,channelName,channelLink,channelDescription,type,avatarUrl));
+        sendChannelResponse(new ChannelKafkaResponse(ownerId,channelId,channelName,channelLink,channelDescription,type,avatarUrl));
     }
-
-
 
 
 
@@ -174,15 +172,17 @@ public class MediaService {
 
 
     public void produceChannelPost(Long ownerId,Long channelId, String text, MultipartFile image, MultipartFile video,
-                            MultipartFile audio,String pollTitle,List<String> options) {
+                            MultipartFile audio,String pollTitle,List<String> options,Long postId,String oldImageUrl,String oldVideoUrl,String oldAudioUrl) {
         String textPost = LinksyTools.clearQuotes(text);
         if (textPost.isEmpty()) textPost = null;
         String title = LinksyTools.clearQuotes(pollTitle);
         if(title.isEmpty()) title=null;
-        String imageUrl = null;
-        String videoUrl= null;
-        String audioUrl= null;
+        String imageUrl= oldImageUrl==null ? null : LinksyTools.clearQuotes(oldImageUrl);
+        String videoUrl= oldVideoUrl==null ? null : LinksyTools.clearQuotes(oldVideoUrl);
+        String audioUrl= oldAudioUrl==null ? null : LinksyTools.clearQuotes(oldAudioUrl);
         List<String> optionsList = null;
+        if(postId==-1) {postId = null;}
+
          if(options!=null) {
              optionsList = options.stream().map(LinksyTools::clearQuotes).toList();
          }
@@ -198,15 +198,12 @@ public class MediaService {
             byte[] audioBytes = getFileBytes(audio);
             audioUrl = uploadResources(audioBytes,uploadAudioDir,".mp3");
         }
-        sendChannelPostResponse(new ChannelPostKafkaResponse(ownerId,channelId,textPost,imageUrl,videoUrl,audioUrl,title,optionsList));
+        sendChannelPostResponse(new ChannelPostKafkaResponse(ownerId,channelId,textPost,imageUrl,videoUrl,audioUrl,title,optionsList,postId));
     }
 
 
-
-
-
     public String uploadResources( byte[] fileBytes,String dir,String ext)  {
-        String uniqueFileName = UUID.randomUUID().toString() + UUID.randomUUID().toString() + "_" + System.currentTimeMillis() + ext;
+        String uniqueFileName = UUID.randomUUID().toString() + UUID.randomUUID() + "_" + System.currentTimeMillis() + ext;
         File directory = new File(dir);
         if (!directory.exists()) {
             directory.mkdirs();
@@ -219,7 +216,6 @@ public class MediaService {
         }
         return domain + dir + uniqueFileName;
     }
-
 
 
     public void sendMediaResponse(MediaResponse response, Topic topic){
