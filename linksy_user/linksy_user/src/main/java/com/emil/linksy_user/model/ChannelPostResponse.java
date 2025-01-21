@@ -26,5 +26,5 @@ public class ChannelPostResponse {
     private Boolean edited;
     private Long authorId;
     private Long commentsCount;
-    private Boolean isAppreciated;
+    private Integer userScore;
 }

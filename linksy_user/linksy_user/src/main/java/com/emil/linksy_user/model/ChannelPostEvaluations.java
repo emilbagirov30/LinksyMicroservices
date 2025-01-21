@@ -6,7 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "linksy_channel_posts_evaluations")
+@Table(name = "linksy_channel_posts_evaluations",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"channel_post_id", "user_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

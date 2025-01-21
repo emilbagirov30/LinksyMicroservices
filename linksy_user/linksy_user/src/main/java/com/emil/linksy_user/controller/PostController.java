@@ -47,7 +47,7 @@ public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
     }
 
     @PostMapping("/add/comment")
-    public ResponseEntity<Void> addLike(@RequestBody CommentRequest request) {
+    public ResponseEntity<Void> addComment(@RequestBody CommentRequest request) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         postService.addComment(userId,request);
         return ResponseEntity.ok().build();

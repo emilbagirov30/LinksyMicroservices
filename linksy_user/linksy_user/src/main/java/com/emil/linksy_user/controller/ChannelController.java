@@ -133,4 +133,36 @@ private final ChannelService channelService;
         var response = channelService.getChannelManagementData(userId,channelId);
         return ResponseEntity.ok(response);
     }
+
+
+    @PostMapping("/post/add/score")
+    public ResponseEntity<Void> addScore(@RequestParam("id") Long postId,
+                                         @RequestParam("score") Integer score) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.setScore(userId,postId,score);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/post/delete/score")
+    public ResponseEntity<Void> deleteScore(@RequestParam("id") Long postId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.deleteScore(userId,postId);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/post/add/comment")
+    public ResponseEntity<Void> addComment(@RequestBody CommentRequest request) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.addComment(userId,request);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("/post/{id}/comments")
+    public ResponseEntity<List<CommentResponse>> getPostComments(@PathVariable("id") Long postId) {
+        var comments = channelService.getAllPostComments(postId);
+        return ResponseEntity.ok(comments);
+    }
+
 }

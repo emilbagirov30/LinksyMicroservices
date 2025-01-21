@@ -24,12 +24,14 @@ public class ChannelService {
     private final PollOptionsRepository pollOptionsRepository;
     private final ChannelSubscriptionsRequestRepository channelSubscriptionsRequestRepository;
     private final ChannelMemberRepository channelMemberRepository;
+    private final ChannelPostCommentsRepository channelPostCommentsRepository;
     private final ChannelPostEvaluationsRepository channelPostEvaluationsRepository;
     private final UserRepository userRepository;
     private final VoterRepository voterRepository;
+
     @KafkaListener(topics = "channelResponse", groupId = "group_id_channel", containerFactory = "channelKafkaResponseKafkaListenerContainerFactory")
     public void consumeChannel(ChannelKafkaResponse response) {
-        if(response.getChannelId()==null) {
+        if (response.getChannelId() == null) {
             User owner = userRepository.findById(response.getOwnerId())
                     .orElseThrow(() -> new NotFoundException("User not found"));
             Channel channel = new Channel();
@@ -48,7 +50,7 @@ public class ChannelService {
             channelMember.setChannel(channel);
             channelMember.setUser(owner);
             channelMemberRepository.save(channelMember);
-        }else {
+        } else {
             Channel channel = channelRepository.findById(response.getChannelId())
                     .orElseThrow(() -> new NotFoundException("Channel not found"));
             channel.setName(response.getName());
@@ -75,7 +77,8 @@ public class ChannelService {
         var channels = channelRepository.findByNameStartingWith(prefix);
         return mapToChannelResponse(channels);
     }
-    private List<ChannelResponse> mapToChannelResponse(List<Channel> channels){
+
+    private List<ChannelResponse> mapToChannelResponse(List<Channel> channels) {
         return channels.stream().map(channel -> {
             var posts = channelPostRepository.findByChannel(channel);
             Double averageRating = posts.stream()
@@ -90,25 +93,25 @@ public class ChannelService {
         }).toList();
     }
 
-   public List<ChannelResponse> getChannels (Long userId){
-       User user = userRepository.findById(userId)
-               .orElseThrow(() -> new NotFoundException("User not found"));
+    public List<ChannelResponse> getChannels(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-       List<ChannelMember> channelMembers = channelMemberRepository.findByUser(user);
-       var channels =  channelMembers.stream().map(ChannelMember::getChannel);
-       return channels.map(channel -> {
-         var posts = channelPostRepository.findByChannel(channel);
-           Double averageRating = posts.stream()
-                   .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
-                   .filter(Objects::nonNull)
-                   .mapToDouble(Double::doubleValue)
-                   .average()
-                   .orElse(0.0);
-           return  new ChannelResponse (channel.getId(),channel.getOwner().getId(),channel.getName(),
-                   channel.getLink(),channel.getAvatarUrl(),Math.round(averageRating * 100.0) / 100.0,channel.getType());
+        List<ChannelMember> channelMembers = channelMemberRepository.findByUser(user);
+        var channels = channelMembers.stream().map(ChannelMember::getChannel);
+        return channels.map(channel -> {
+            var posts = channelPostRepository.findByChannel(channel);
+            Double averageRating = posts.stream()
+                    .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Double::doubleValue)
+                    .average()
+                    .orElse(0.0);
+            return new ChannelResponse(channel.getId(), channel.getOwner().getId(), channel.getName(),
+                    channel.getLink(), channel.getAvatarUrl(), Math.round(averageRating * 100.0) / 100.0, channel.getType());
 
-       }).toList();
-   }
+        }).toList();
+    }
 
 
     public ChannelPageData getChannelPageData(Long finderId, Long channelId) {
@@ -158,17 +161,16 @@ public class ChannelService {
     }
 
 
+    public void deleteRequest(Long userId, Long channelId) {
+        User candidate = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate, channel);
+        channelSubscriptionsRequestRepository.delete(request);
+    }
 
-    public void deleteRequest(Long userId,Long channelId){
-       User candidate = userRepository.findById(userId)
-               .orElseThrow(() -> new NotFoundException("User not found"));
-       Channel channel = channelRepository.findById(channelId)
-               .orElseThrow(() -> new NotFoundException("Channel not found"));
-       var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate,channel);
-       channelSubscriptionsRequestRepository.delete(request);
-   }
-
-    public void submitRequest (Long userId,Long channelId){
+    public void submitRequest(Long userId, Long channelId) {
         User candidate = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
@@ -179,37 +181,21 @@ public class ChannelService {
         channelSubscriptionsRequestRepository.save(request);
     }
 
-   public List<UserResponse> getChannelSubscriptionRequests (Long userId,Long channelId){
-       User owner = userRepository.findById(userId)
-               .orElseThrow(() -> new NotFoundException("User not found"));
-       Channel channel = channelRepository.findById(channelId)
-               .orElseThrow(() -> new NotFoundException("Channel not found"));
-       if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
-       var candidates = channelSubscriptionsRequestRepository.findByChannel(channel);
+    public List<UserResponse> getChannelSubscriptionRequests(Long userId, Long channelId) {
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
+        var candidates = channelSubscriptionsRequestRepository.findByChannel(channel);
 
-       return candidates.stream().map(candidate ->{
-           User user = candidate.getUser();
-           return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(),user.getOnline(),user.getConfirmed());
-       }).toList();
-   }
+        return candidates.stream().map(candidate -> {
+            User user = candidate.getUser();
+            return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(), user.getOnline(), user.getConfirmed());
+        }).toList();
+    }
 
-   public void acceptUserToChannel(Long ownerId,Long channelId,Long candidateId) {
-       User owner = userRepository.findById(ownerId)
-               .orElseThrow(() -> new NotFoundException("User not found"));
-       Channel channel = channelRepository.findById(channelId)
-               .orElseThrow(() -> new NotFoundException("Channel not found"));
-       if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
-       User candidate = userRepository.findById(candidateId)
-               .orElseThrow(() -> new NotFoundException("User not found"));
-       ChannelMember channelMember = new ChannelMember();
-       channelMember.setUser(candidate);
-       channelMember.setChannel(channel);
-       var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate,channel);
-       channelSubscriptionsRequestRepository.delete(request);
-       channelMemberRepository.save(channelMember);
-   }
-
-    public void rejectSubscriptionRequest(Long ownerId,Long channelId,Long candidateId) {
+    public void acceptUserToChannel(Long ownerId, Long channelId, Long candidateId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
@@ -217,8 +203,24 @@ public class ChannelService {
         if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
         User candidate = userRepository.findById(candidateId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-      var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate,channel);
-      channelSubscriptionsRequestRepository.delete(request);
+        ChannelMember channelMember = new ChannelMember();
+        channelMember.setUser(candidate);
+        channelMember.setChannel(channel);
+        var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate, channel);
+        channelSubscriptionsRequestRepository.delete(request);
+        channelMemberRepository.save(channelMember);
+    }
+
+    public void rejectSubscriptionRequest(Long ownerId, Long channelId, Long candidateId) {
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
+        User candidate = userRepository.findById(candidateId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate, channel);
+        channelSubscriptionsRequestRepository.delete(request);
     }
 
     @KafkaListener(topics = "channelPostResponse", groupId = "group_id_channel", containerFactory = "channelPostKafkaResponseKafkaListenerContainerFactory")
@@ -228,7 +230,7 @@ public class ChannelService {
         Channel channel = channelRepository.findById(response.getChannelId())
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
 
-        if (response.getPostId()==null) {
+        if (response.getPostId() == null) {
 
             if (!channel.getOwner().getId().equals(owner.getId()))
                 throw new SecurityException("User is not the owner channel");
@@ -257,7 +259,7 @@ public class ChannelService {
                 }
             }
             channelPostRepository.save(channelPost);
-        }else {
+        } else {
             ChannelPost channelPost = channelPostRepository.findById(response.getPostId())
                     .orElseThrow(() -> new NotFoundException("Post not found"));
             channelPost.setChannel(channel);
@@ -266,24 +268,24 @@ public class ChannelService {
             channelPost.setEdited(true);
             channelPost.setVideoUrl(response.getVideoUrl());
 
-                if (response.getOptions() != null) {
-                    if (!response.getOptions().isEmpty()) {
-                        Poll poll = new Poll();
-                        poll.setTitle(response.getPollTitle());
-                        pollRepository.save(poll);
-                        channelPost.setPoll(poll);
-                        var options = response.getOptions();
-                        for (String option : options) {
-                            PollOptions pollOptions = new PollOptions();
-                            pollOptions.setPoll(poll);
-                            pollOptions.setOption(option);
-                            pollOptions.setSelectedCount(0L);
-                            pollOptionsRepository.save(pollOptions);
-                        }
+            if (response.getOptions() != null) {
+                if (!response.getOptions().isEmpty()) {
+                    Poll poll = new Poll();
+                    poll.setTitle(response.getPollTitle());
+                    pollRepository.save(poll);
+                    channelPost.setPoll(poll);
+                    var options = response.getOptions();
+                    for (String option : options) {
+                        PollOptions pollOptions = new PollOptions();
+                        pollOptions.setPoll(poll);
+                        pollOptions.setOption(option);
+                        pollOptions.setSelectedCount(0L);
+                        pollOptionsRepository.save(pollOptions);
                     }
-                } else channelPost.setPoll(null);
+                }
+            } else channelPost.setPoll(null);
             channelPostRepository.save(channelPost);
-    }
+        }
     }
 
     public List<ChannelPostResponse> getChannelsPost(Long userId, Long channelId) {
@@ -294,7 +296,7 @@ public class ChannelService {
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         boolean isMember = channelMembers.stream()
                 .anyMatch(channelMember -> channelMember.getUser().equals(finder));
-        if (!isMember&&channel.getType().equals(ChannelType.PRIVATE)) {
+        if (!isMember && channel.getType().equals(ChannelType.PRIVATE)) {
             throw new SecurityException("User is not a member of the channel");
         }
 
@@ -323,7 +325,8 @@ public class ChannelService {
                                 .map(op -> new OptionResponse(op.getId(), op.getOption(), op.getSelectedCount()))
                                 .toList();
                     }
-
+                    Integer userScore = channelPostEvaluationsRepository.findScoreByChannelPostIdAndUserId(post.getId(),userId);
+                    Long commentsCount = channelPostCommentsRepository.countByChannelPost(post);
                     return new ChannelPostResponse(
                             post.getId(),
                             channel.getName(),
@@ -340,13 +343,12 @@ public class ChannelService {
                             post.getReposts(),
                             post.getEdited(),
                             post.getChannel().getOwner().getId(),
-                            0L, //временная заглушка
-                            true //временная заглушка
+                            commentsCount,
+                            userScore
                     );
                 })
                 .toList();
     }
-
 
 
     private boolean isVoted(List<PollOptions> options, User user) {
@@ -358,10 +360,10 @@ public class ChannelService {
         return voters.stream().anyMatch(voter -> voter.getUser().equals(user));
     }
 
-    public List<UserResponse> getChannelMembers (Long userId, Long channelId) {
+    public List<UserResponse> getChannelMembers(Long userId, Long channelId) {
         User requester = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-       Channel channel = channelRepository.findById(channelId)
+        Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
         List<ChannelMember> members = channelMemberRepository.findByChannel(channel);
         boolean isMember = members.stream().anyMatch(channelMember -> channelMember.getUser().equals(requester));
@@ -370,11 +372,12 @@ public class ChannelService {
         return members.stream()
                 .map(member -> {
                     User user = member.getUser();
-                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(),user.getOnline(),user.getConfirmed());
+                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(), user.getOnline(), user.getConfirmed());
                 })
                 .toList();
     }
-    public void deletePost (Long userId,long postId) {
+
+    public void deletePost(Long userId, long postId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         ChannelPost post = channelPostRepository.findById(postId)
@@ -385,7 +388,7 @@ public class ChannelService {
         Poll poll = post.getPoll();
         post.setPoll(null);
         channelPostRepository.delete(post);
-        if (poll!=null){
+        if (poll != null) {
             var pollOptions = pollOptionsRepository.findByPoll(poll);
             pollOptions.forEach(option -> {
                 var voters = voterRepository.findByOption(option);
@@ -400,32 +403,29 @@ public class ChannelService {
     }
 
 
-
-
-    public void subscribe(Long subscriberId,Long channelId){
+    public void subscribe(Long subscriberId, Long channelId) {
         User subscriber = userRepository.findById(subscriberId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
-       ChannelMember channelMember = new ChannelMember();
-      channelMember.setUser(subscriber);
-      channelMember.setChannel(channel);
-      channelMemberRepository.save(channelMember);
+        ChannelMember channelMember = new ChannelMember();
+        channelMember.setUser(subscriber);
+        channelMember.setChannel(channel);
+        channelMemberRepository.save(channelMember);
     }
 
-    public void unsubscribe(Long subscriberId,Long channelId){
+    public void unsubscribe(Long subscriberId, Long channelId) {
         User subscriber = userRepository.findById(subscriberId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
-       ChannelMember channelMember = channelMemberRepository.findByUserAndChannel(subscriber,channel)
+        ChannelMember channelMember = channelMemberRepository.findByUserAndChannel(subscriber, channel)
                 .orElseThrow(() -> new NotFoundException(" ChannelMember not found"));
-       channelMemberRepository.delete(channelMember);
+        channelMemberRepository.delete(channelMember);
     }
 
 
-
-    public void vote(Long userId,Long optionId){
+    public void vote(Long userId, Long optionId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         PollOptions pollOptions = pollOptionsRepository.findById(optionId)
@@ -436,19 +436,72 @@ public class ChannelService {
         voterRepository.save(voter);
         var count = pollOptions.getSelectedCount();
 
-      pollOptions.setSelectedCount(++count);
-      pollOptionsRepository.save(pollOptions);
+        pollOptions.setSelectedCount(++count);
+        pollOptionsRepository.save(pollOptions);
     }
 
 
-    public ChannelManagementResponse getChannelManagementData (Long userId,Long channelId){
+    public ChannelManagementResponse getChannelManagementData(Long userId, Long channelId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new NotFoundException("Channel not found"));
 
         if (!channel.getOwner().equals(user))
-            throw  new AccessDeniedException("User do not own the channel");
-        return new ChannelManagementResponse(channel.getName(), channel.getLink(), channel.getAvatarUrl(), channel.getDescription(),channel.getType());
+            throw new AccessDeniedException("User do not own the channel");
+        return new ChannelManagementResponse(channel.getName(), channel.getLink(), channel.getAvatarUrl(), channel.getDescription(), channel.getType());
+    }
+
+    public void setScore(Long userId, Long postId, int score) {
+        if (score < 0 || score > 5) throw new IllegalArgumentException("incorrect score");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        ChannelPost post = channelPostRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        ChannelPostEvaluations evaluation = new ChannelPostEvaluations();
+        evaluation.setScore(score);
+        evaluation.setUser(user);
+        evaluation.setChannelPost(post);
+        channelPostEvaluationsRepository.save(evaluation);
+    }
+
+    public void deleteScore(Long userId, Long postId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        ChannelPost post = channelPostRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        ChannelPostEvaluations evaluation = channelPostEvaluationsRepository.findByChannelPostAndUser(post,user);
+        channelPostEvaluationsRepository.delete(evaluation);
+    }
+    public void addComment (Long userId,CommentRequest comment){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        ChannelPost post =channelPostRepository.findById(comment.getPostId())
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        ChannelPostComment newComment = new  ChannelPostComment();
+        newComment.setUser(user);
+        newComment.setChannelPost(post);
+        newComment.setText(comment.getText());
+        if (comment.getParentCommentId()!=null){
+            ChannelPostComment parentComment = channelPostCommentsRepository.findById(comment.getParentCommentId())
+                    .orElseThrow(() -> new NotFoundException("ParentComment not found"));
+            newComment.setParent(parentComment);
+        }
+           channelPostCommentsRepository.save(newComment);
+    }
+
+
+    public List<CommentResponse> getAllPostComments (Long postId){
+        ChannelPost post =channelPostRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        var comments = channelPostCommentsRepository.findByChannelPost(post);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
+        return comments.stream()
+                .map(comment -> {
+                    User author = comment.getUser();
+                    Long parentId = comment.getParent() == null ? null : comment.getParent().getId();
+                    return new CommentResponse(comment.getId(), author.getId(), author.getAvatarUrl(), author.getUsername(), parentId,comment.getText(),
+                            dateFormat.format(comment.getDate()));
+                }).toList();
     }
 }
