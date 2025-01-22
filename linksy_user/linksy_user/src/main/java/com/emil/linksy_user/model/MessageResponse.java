@@ -20,4 +20,5 @@ public class MessageResponse {
     private String voiceUrl;
     private String date;
     private Boolean viewed;
+    private Boolean edited;
 }

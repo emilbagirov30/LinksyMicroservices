@@ -50,6 +50,7 @@ public class MessageService {
         message.setAudioUrl(response.getAudioUrl());
         message.setVoiceUrl(response.getVoiceUrl());
         message.setViewed(false);
+        message.setEdited(false);
         Chat chat;
         if(chatId==null) {
             Long recipientId = response.getRecipientId();
@@ -68,7 +69,7 @@ public class MessageService {
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("HH:mm");
       sendMessage(chat,new MessageResponse(message.getId(), sender.getId(),chat.getId(),
              response.getText(),response.getImageUrl(),response.getVideoUrl(),
-              response.getAudioUrl(),response.getVoiceUrl(), dateFormat.format(LocalDateTime.now()),false));
+              response.getAudioUrl(),response.getVoiceUrl(), dateFormat.format(LocalDateTime.now()),false,false));
 
 
     }
@@ -104,7 +105,7 @@ public class MessageService {
                         message.getAudioUrl(),
                         message.getVoiceUrl(),
                         dateFormat.format(message.getDate()),
-                        message.getViewed()
+                        message.getViewed(),message.getEdited()
 
                 ))
                 .collect(Collectors.toList());
@@ -133,7 +134,7 @@ public class MessageService {
                         message.getAudioUrl(),
                         message.getVoiceUrl(),
                         dateFormat.format(message.getDate()),
-                        message.getViewed()
+                        message.getViewed(),message.getEdited()
                 ))
                 .collect(Collectors.toList());
     }
@@ -163,6 +164,24 @@ public class MessageService {
 
         for (User user: users){
             messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/deleted/" + chat.getId() + "/", messageId);
+        }
+
+    }
+
+    @Transactional
+    public void editMessage (Long userId,Long messageId,String text){
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("Message not found"));
+        if (!message.getSender().getId().equals(userId)) throw new AccessDeniedException("The user is not the sender");
+        Chat chat = message.getChat();
+        var members = chatMemberRepository.findByChat(chat);
+        var users = members.stream().map(ChatMember::getUser).toList();
+        message.setText(text);
+        message.setEdited(true);
+        messageRepository.save(message);
+            var response = new EditMessageResponse(messageId,text);
+        for (User user: users){
+            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/edited/" + chat.getId() + "/", response);
         }
 
     }

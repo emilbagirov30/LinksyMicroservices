@@ -44,4 +44,12 @@ public class MessageController {
         messageService.deleteMessage(userId,messageId);
         return ResponseEntity.ok().build();
     }
+
+
+    @PutMapping("/edit")
+    public ResponseEntity<Void> editMessage(@RequestParam("id") Long messageId, @RequestParam("text") String text)  {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        messageService.editMessage(userId,messageId,text);
+        return ResponseEntity.ok().build();
+    }
 }

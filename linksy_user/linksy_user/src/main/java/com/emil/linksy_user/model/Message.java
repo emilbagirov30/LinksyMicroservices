@@ -46,6 +46,8 @@ public class Message {
     private String voiceUrl;
     @Column(name = "viewed")
     Boolean viewed;
+    @Column(name = "edited")
+    Boolean edited;
 
 }
 
