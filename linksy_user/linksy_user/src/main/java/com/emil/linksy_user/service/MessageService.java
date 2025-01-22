@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -141,7 +142,7 @@ public class MessageService {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
         var messages =  messageRepository.findByChat(chat);
-       var filterMessages = messages.stream().filter( message -> !message.getSender().getId().equals(userId) && !message.getViewed()).toList();
+        var filterMessages = messages.stream().filter( message -> !message.getSender().getId().equals(userId) && !message.getViewed()).toList();
         filterMessages.forEach(message -> message.setViewed(true));
         messageRepository.saveAll(filterMessages);
 
@@ -149,5 +150,22 @@ public class MessageService {
           messagingTemplate.convertAndSendToUser(m.getSender().getAccessToken(), "/queue/messages/viewed/" + chatId + "/", m.getId());
    }
     }
+
+
+    public void deleteMessage (Long userId,Long messageId){
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("Message not found"));
+        Chat chat = message.getChat();
+        var members = chatMemberRepository.findByChat(chat);
+        var users = members.stream().map(ChatMember::getUser).toList();
+        if (!message.getSender().getId().equals(userId)) throw new AccessDeniedException("The user is not the sender");
+        messageRepository.delete(message);
+
+        for (User user: users){
+            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/deleted/" + chat.getId() + "/", messageId);
+        }
+
+    }
+
 
 }

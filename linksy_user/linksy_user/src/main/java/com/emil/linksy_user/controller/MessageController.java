@@ -37,4 +37,11 @@ public class MessageController {
         messageService.setViewed(userId,chatId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteMessage(@RequestParam("id") Long messageId)  {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        messageService.deleteMessage(userId,messageId);
+        return ResponseEntity.ok().build();
+    }
 }
