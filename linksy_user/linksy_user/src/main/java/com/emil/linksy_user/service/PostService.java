@@ -88,6 +88,32 @@ public class PostService {
     }
 
 
+    public List<PostResponse> toPostResponse (User finder,List<Post> posts){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
+        return posts.stream()
+                .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
+                .map(post ->{
+                    Long likesCount = userPostLikeRepository.countByPost(post);
+                    Long commentsCount = userPostCommentRepository.countByPost(post);
+                    Boolean isLikedIt = userPostLikeRepository.existsByPostAndUser(post,finder);
+                    Boolean edited = post.getEdited();
+                    return new PostResponse(
+                            post.getId(),
+                            post.getUser().getUsername(),
+                            post.getUser().getAvatarUrl(),
+                            post.getImageUrl(),
+                            post.getVideoUrl(),
+                            post.getAudioUrl(),
+                            post.getVoiceUrl(),
+                            post.getText(),
+                            dateFormat.format(post.getPublicationTime()),
+                            likesCount,
+                            commentsCount,
+                            post.getReposts(), isLikedIt,edited
+
+                    );}).toList();
+    }
+
 
 
     public List<PostResponse> getOutsiderUserPosts(Long finderId,Long userId) {

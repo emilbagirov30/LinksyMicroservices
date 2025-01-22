@@ -504,4 +504,54 @@ public class ChannelService {
                             dateFormat.format(comment.getDate()));
                 }).toList();
     }
+
+
+
+
+
+
+
+
+    public ChannelPostResponse toChannelPostResponse(User finder,ChannelPost post) {
+        Double averageRating = channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId());
+        if (averageRating == null) {
+            averageRating = 0.0;
+        }
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
+        List<OptionResponse> optionResponseList = null;
+        String title = null;
+        Boolean isVoted = false;
+
+        if (post.getPoll() != null) {
+            Poll poll = pollRepository.findById(post.getPoll().getId())
+                    .orElseThrow(() -> new NotFoundException("Poll not found"));
+            title = poll.getTitle();
+            var options = pollOptionsRepository.findByPoll(poll);
+            isVoted = isVoted(options, finder);
+            optionResponseList = options.stream()
+                    .map(op -> new OptionResponse(op.getId(), op.getOption(), op.getSelectedCount()))
+                    .toList();
+        }
+        Integer userScore = channelPostEvaluationsRepository.findScoreByChannelPostIdAndUserId(post.getId(), finder.getId());
+        Long commentsCount = channelPostCommentsRepository.countByChannelPost(post);
+        return new ChannelPostResponse(
+                post.getId(),
+                post.getChannel().getName(),
+                post.getChannel().getAvatarUrl(),
+                post.getText(),
+                post.getImageUrl(),
+                post.getVideoUrl(),
+                post.getAudioUrl(),
+                dateFormat.format(post.getPublicationTime()),
+                title,
+                isVoted,
+                optionResponseList,
+                Math.round(averageRating * 100.0) / 100.0,
+                post.getReposts(),
+                post.getEdited(),
+                post.getChannel().getOwner().getId(),
+                commentsCount,
+                userScore
+        );
+    }
 }
