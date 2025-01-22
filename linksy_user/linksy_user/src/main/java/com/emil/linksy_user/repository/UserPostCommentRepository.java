@@ -15,4 +15,5 @@ public interface UserPostCommentRepository extends JpaRepository<UserPostComment
     List<UserPostComment> findByPost(Post post);
     void deleteByPostAndParentIdIsNotNull(Post post);
     void deleteByPostAndParentIdIsNull(Post post);
+    List<UserPostComment> findByParent(UserPostComment userPostComment);
 }

@@ -9,6 +9,7 @@ import com.emil.linksy_user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -219,7 +220,17 @@ public void deletePost (Long userId,long postId) {
                  }).toList();
     }
 
-
-
+    @Transactional
+    public void deleteComment (Long userId,Long commentId){
+        UserPostComment comment = userPostCommentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Comment not found"));
+        if (!comment.getUser().getId().equals(userId)) throw new AccessDeniedException("THE USER DID NOT LEAVE A COMMENT");
+        var childComments = userPostCommentRepository.findByParent(comment);
+        for (UserPostComment comm :childComments){
+            comm.setParent(null);
+            userPostCommentRepository.save(comm);
+        }
+        userPostCommentRepository.delete(comment);
+    }
 
 }

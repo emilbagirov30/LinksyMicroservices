@@ -4,6 +4,7 @@ import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
 import com.emil.linksy_user.util.ChannelType;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.access.AccessDeniedException;
@@ -553,5 +554,18 @@ public class ChannelService {
                 commentsCount,
                 userScore
         );
+    }
+
+    @Transactional
+    public void deleteComment (Long userId,Long commentId){
+        ChannelPostComment comment = channelPostCommentsRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Comment not found"));
+        if (!comment.getUser().getId().equals(userId)) throw new AccessDeniedException("THE USER DID NOT LEAVE A COMMENT");
+        var childComments = channelPostCommentsRepository.findByParent(comment);
+        for ( ChannelPostComment comm :childComments){
+            comm.setParent(null);
+            channelPostCommentsRepository.save(comm);
+        }
+        channelPostCommentsRepository.delete(comment);
     }
 }

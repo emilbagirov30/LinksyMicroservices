@@ -11,4 +11,5 @@ public interface ChannelPostCommentsRepository extends JpaRepository<ChannelPost
     @Query("SELECT COUNT(u) FROM ChannelPostComment u WHERE u.channelPost = :channelPost")
     Long countByChannelPost(@Param("channelPost") ChannelPost channelPost);
     List<ChannelPostComment> findByChannelPost(ChannelPost channelPost);
+    List<ChannelPostComment> findByParent(ChannelPostComment channelPostComment);
 }

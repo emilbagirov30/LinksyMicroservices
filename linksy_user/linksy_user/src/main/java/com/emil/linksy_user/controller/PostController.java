@@ -59,4 +59,10 @@ public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
         return ResponseEntity.ok(comments);
     }
 
+    @DeleteMapping("/comment/delete")
+    public ResponseEntity<Void> deleteComment(@RequestParam("id") Long commentId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        postService.deleteComment(userId,commentId);
+        return ResponseEntity.ok().build();
+    }
 }

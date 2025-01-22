@@ -164,5 +164,10 @@ private final ChannelService channelService;
         var comments = channelService.getAllPostComments(postId);
         return ResponseEntity.ok(comments);
     }
-
+    @DeleteMapping("/post/comment/delete")
+    public ResponseEntity<Void> deleteComment(@RequestParam("id") Long commentId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        channelService.deleteComment(userId,commentId);
+        return ResponseEntity.ok().build();
+    }
 }
