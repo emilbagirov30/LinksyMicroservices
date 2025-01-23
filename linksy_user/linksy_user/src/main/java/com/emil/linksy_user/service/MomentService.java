@@ -17,13 +17,12 @@ import java.util.stream.Collectors;
 public class MomentService {
     private final UserRepository userRepository;
     private final MomentRepository momentRepository;
-
+    private final LinksyCacheManager linksyCacheManager;
 
     @KafkaListener(topics = "momentResponse", groupId = "group_id_moment", containerFactory = "momentKafkaResponseKafkaListenerContainerFactory")
     public void consumeMoment(MomentKafkaResponse response) {
         Long authorId = response.getAuthorId();
-        User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User author = linksyCacheManager.getUserById(authorId);
         Moment newMoment = new Moment();
         newMoment.setUser(author);
         newMoment.setText(response.getText());
@@ -33,8 +32,7 @@ public class MomentService {
         momentRepository.save(newMoment);
     }
     public List<MomentResponse> getUserMoments(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
 
         List<Moment> moments = momentRepository.findByUser(user);
 
@@ -54,8 +52,7 @@ public class MomentService {
                 .collect(Collectors.toList());
     }
     public void deleteMoment (Long userId,long momentId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         Moment moment = momentRepository.findById(momentId)
                 .orElseThrow(() -> new NotFoundException("Post not found"));
         if (!moment.getUser().getId().equals(user.getId())) {

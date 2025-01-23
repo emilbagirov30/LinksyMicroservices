@@ -7,7 +7,6 @@ import com.emil.linksy_user.repository.BlackListRepository;
 import com.emil.linksy_user.repository.SubscriptionsRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,7 +22,7 @@ public class PeopleService {
     private final UserRepository userRepository;
     private final SubscriptionsRepository subscriptionsRepository;
     private final BlackListRepository blackListRepository;
-
+    private final LinksyCacheManager linksyCacheManager;
     public List<UserResponse> findByLink(Long userId, String startsWith) {
         List<User> userList = userRepository.findByLinkStartingWith(startsWith);
         return mapToUserResponse(userId, userList);
@@ -47,10 +46,8 @@ public class PeopleService {
     }
 
     public void subscribe(Long subscriberId,Long userId){
-        User subscriber = userRepository.findById(subscriberId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User subscriber = linksyCacheManager.getUserById(subscriberId);
+        User user = linksyCacheManager.getUserById(userId);
         Subscriptions subscriptions = new Subscriptions();
         subscriptions.setSubscriber(subscriber);
         subscriptions.setUser(user);
@@ -58,10 +55,8 @@ public class PeopleService {
     }
 
     public void unsubscribe(Long subscriberId,Long userId){
-        User subscriber = userRepository.findById(subscriberId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User subscriber = linksyCacheManager.getUserById(subscriberId);
+        User user = linksyCacheManager.getUserById(userId);
         Subscriptions subscriptions = subscriptionsRepository.findByUserAndSubscriber(user,subscriber)
                 .orElseThrow(() -> new NotFoundException("Subscriptions not found"));
         subscriptionsRepository.delete(subscriptions);
@@ -69,8 +64,7 @@ public class PeopleService {
 
 
     public List<UserResponse> getUserSubscribers(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         List<Subscriptions> subscriptionsList = subscriptionsRepository.findAllByUser(user);
         List<User> subscribers = subscriptionsList.stream()
                 .map(Subscriptions::getSubscriber)
@@ -80,8 +74,7 @@ public class PeopleService {
 
 
     public List<UserResponse> getUserSubscriptions(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         List<Subscriptions> subscriptionsList = subscriptionsRepository.findAllBySubscriber(user);
         List<User> subscriptions = subscriptionsList.stream()
                 .map(Subscriptions::getUser)
@@ -92,10 +85,8 @@ public class PeopleService {
 
 
     public UserPageData getUserPageData (Long finderId,Long id){
-        User finder = userRepository.findById(finderId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User finder = linksyCacheManager.getUserById(finderId);
+        User user = linksyCacheManager.getUserById(id);
         boolean isBlockedByPageOwner = isBlocked(finder,user);
         if (isBlockedByPageOwner) throw new UserBlockedException("Access is denied: you are blocked by the owner of the page.");
         String username = user.getUsername();
@@ -130,10 +121,8 @@ public class PeopleService {
 
 
        public void addToBlackList (Long initiatorId,Long userId){
-           User initiator = userRepository.findById(initiatorId)
-                   .orElseThrow(() -> new NotFoundException("User not found"));
-           User user = userRepository.findById(userId)
-                   .orElseThrow(() -> new NotFoundException("User not found"));
+           User initiator = linksyCacheManager.getUserById(initiatorId);
+           User user = linksyCacheManager.getUserById(userId);
 
            BlackList blacklist = new BlackList();
            blacklist.setInitiator(initiator);
@@ -143,10 +132,9 @@ public class PeopleService {
 
 
     public void removeFromBlackList (Long initiatorId,Long userId){
-        User initiator = userRepository.findById(initiatorId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User initiator = linksyCacheManager.getUserById(initiatorId);
+
+        User user = linksyCacheManager.getUserById(userId);;
 
         BlackList blacklist = blackListRepository.findByInitiatorAndBlocked(initiator,user)
                 .orElseThrow(() -> new NotFoundException("Not found"));
@@ -155,8 +143,7 @@ public class PeopleService {
 
 
     public List<UserResponse> getEveryoneOffTheBlacklist (Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);;
         var blacklists = blackListRepository.findByInitiator(user);
         return blacklists.stream().map(blackList -> {
             User blocked = blackList.getBlocked();

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -27,14 +26,12 @@ public class ChannelService {
     private final ChannelMemberRepository channelMemberRepository;
     private final ChannelPostCommentsRepository channelPostCommentsRepository;
     private final ChannelPostEvaluationsRepository channelPostEvaluationsRepository;
-    private final UserRepository userRepository;
     private final VoterRepository voterRepository;
-
+    private final LinksyCacheManager linksyCacheManager;
     @KafkaListener(topics = "channelResponse", groupId = "group_id_channel", containerFactory = "channelKafkaResponseKafkaListenerContainerFactory")
     public void consumeChannel(ChannelKafkaResponse response) {
         if (response.getChannelId() == null) {
-            User owner = userRepository.findById(response.getOwnerId())
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User owner = linksyCacheManager.getUserById(response.getOwnerId());
             Channel channel = new Channel();
             channel.setOwner(owner);
             channel.setName(response.getName());
@@ -47,13 +44,13 @@ public class ChannelService {
             channel.setDescription(response.getDescription());
             channel.setType(response.getType());
             channelRepository.save(channel);
+            linksyCacheManager.cacheChannel(channel);
             ChannelMember channelMember = new ChannelMember();
             channelMember.setChannel(channel);
             channelMember.setUser(owner);
             channelMemberRepository.save(channelMember);
         } else {
-            Channel channel = channelRepository.findById(response.getChannelId())
-                    .orElseThrow(() -> new NotFoundException("Channel not found"));
+            Channel channel = linksyCacheManager.getChannelById(response.getChannelId());
             channel.setName(response.getName());
             if (channelRepository.existsByLinkAndNotId(response.getLink(), response.getChannelId())) {
                 channel.setLink(null);
@@ -64,6 +61,7 @@ public class ChannelService {
             channel.setDescription(response.getDescription());
             channel.setType(response.getType());
             channelRepository.save(channel);
+            linksyCacheManager.cacheChannel(channel);
         }
     }
 
@@ -95,8 +93,7 @@ public class ChannelService {
     }
 
     public List<ChannelResponse> getChannels(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
 
         List<ChannelMember> channelMembers = channelMemberRepository.findByUser(user);
         var channels = channelMembers.stream().map(ChannelMember::getChannel);
@@ -116,10 +113,8 @@ public class ChannelService {
 
 
     public ChannelPageData getChannelPageData(Long finderId, Long channelId) {
-        User finder = userRepository.findById(finderId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User finder = linksyCacheManager.getUserById(finderId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
 
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         Long memberCount = (long) channelMembers.size();
@@ -163,19 +158,15 @@ public class ChannelService {
 
 
     public void deleteRequest(Long userId, Long channelId) {
-        User candidate = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User candidate = linksyCacheManager.getUserById(userId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate, channel);
         channelSubscriptionsRequestRepository.delete(request);
     }
 
     public void submitRequest(Long userId, Long channelId) {
-        User candidate = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User candidate = linksyCacheManager.getUserById(userId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         ChannelSubscriptionsRequest request = new ChannelSubscriptionsRequest();
         request.setChannel(channel);
         request.setUser(candidate);
@@ -183,10 +174,8 @@ public class ChannelService {
     }
 
     public List<UserResponse> getChannelSubscriptionRequests(Long userId, Long channelId) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User owner = linksyCacheManager.getUserById(userId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
         var candidates = channelSubscriptionsRequestRepository.findByChannel(channel);
 
@@ -197,13 +186,10 @@ public class ChannelService {
     }
 
     public void acceptUserToChannel(Long ownerId, Long channelId, Long candidateId) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User owner = linksyCacheManager.getUserById(ownerId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
-        User candidate = userRepository.findById(candidateId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User candidate = linksyCacheManager.getUserById(candidateId);
         ChannelMember channelMember = new ChannelMember();
         channelMember.setUser(candidate);
         channelMember.setChannel(channel);
@@ -213,23 +199,18 @@ public class ChannelService {
     }
 
     public void rejectSubscriptionRequest(Long ownerId, Long channelId, Long candidateId) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User owner = linksyCacheManager.getUserById(ownerId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
-        User candidate = userRepository.findById(candidateId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User candidate =  linksyCacheManager.getUserById(candidateId);
         var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate, channel);
         channelSubscriptionsRequestRepository.delete(request);
     }
 
     @KafkaListener(topics = "channelPostResponse", groupId = "group_id_channel", containerFactory = "channelPostKafkaResponseKafkaListenerContainerFactory")
     public void consumeChannelPost(ChannelPostKafkaResponse response) {
-        User owner = userRepository.findById(response.getOwnerId())
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(response.getChannelId())
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User owner = linksyCacheManager.getUserById(response.getOwnerId());
+        Channel channel = linksyCacheManager.getChannelById(response.getChannelId());
 
         if (response.getPostId() == null) {
 
@@ -290,10 +271,8 @@ public class ChannelService {
     }
 
     public List<ChannelPostResponse> getChannelsPost(Long userId, Long channelId) {
-        User finder = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User finder = linksyCacheManager.getUserById(userId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         boolean isMember = channelMembers.stream()
                 .anyMatch(channelMember -> channelMember.getUser().equals(finder));
@@ -362,10 +341,8 @@ public class ChannelService {
     }
 
     public List<UserResponse> getChannelMembers(Long userId, Long channelId) {
-        User requester = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        User requester = linksyCacheManager.getUserById(userId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         List<ChannelMember> members = channelMemberRepository.findByChannel(channel);
         boolean isMember = members.stream().anyMatch(channelMember -> channelMember.getUser().equals(requester));
         if (!isMember) throw new AccessDeniedException("User is not a member of this chat");
@@ -379,8 +356,7 @@ public class ChannelService {
     }
 
     public void deletePost(Long userId, long postId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         ChannelPost post = channelPostRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         if (!post.getChannel().getOwner().equals(user)) {
@@ -405,10 +381,8 @@ public class ChannelService {
 
 
     public void subscribe(Long subscriberId, Long channelId) {
-        User subscriber = userRepository.findById(subscriberId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User subscriber = linksyCacheManager.getUserById(subscriberId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         ChannelMember channelMember = new ChannelMember();
         channelMember.setUser(subscriber);
         channelMember.setChannel(channel);
@@ -416,10 +390,8 @@ public class ChannelService {
     }
 
     public void unsubscribe(Long subscriberId, Long channelId) {
-        User subscriber = userRepository.findById(subscriberId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User subscriber = linksyCacheManager.getUserById(subscriberId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
         ChannelMember channelMember = channelMemberRepository.findByUserAndChannel(subscriber, channel)
                 .orElseThrow(() -> new NotFoundException(" ChannelMember not found"));
         channelMemberRepository.delete(channelMember);
@@ -427,8 +399,7 @@ public class ChannelService {
 
 
     public void vote(Long userId, Long optionId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         PollOptions pollOptions = pollOptionsRepository.findById(optionId)
                 .orElseThrow(() -> new NotFoundException("Not found"));
         Voter voter = new Voter();
@@ -443,10 +414,8 @@ public class ChannelService {
 
 
     public ChannelManagementResponse getChannelManagementData(Long userId, Long channelId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        Channel channel = channelRepository.findById(channelId)
-                .orElseThrow(() -> new NotFoundException("Channel not found"));
+        User user = linksyCacheManager.getUserById(userId);
+        Channel channel = linksyCacheManager.getChannelById(channelId);
 
         if (!channel.getOwner().equals(user))
             throw new AccessDeniedException("User do not own the channel");
@@ -455,8 +424,7 @@ public class ChannelService {
 
     public void setScore(Long userId, Long postId, int score) {
         if (score < 0 || score > 5) throw new IllegalArgumentException("incorrect score");
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         ChannelPost post = channelPostRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         ChannelPostEvaluations evaluation = new ChannelPostEvaluations();
@@ -467,16 +435,14 @@ public class ChannelService {
     }
 
     public void deleteScore(Long userId, Long postId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         ChannelPost post = channelPostRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         ChannelPostEvaluations evaluation = channelPostEvaluationsRepository.findByChannelPostAndUser(post,user);
         channelPostEvaluationsRepository.delete(evaluation);
     }
     public void addComment (Long userId,CommentRequest comment){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         ChannelPost post =channelPostRepository.findById(comment.getPostId())
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
         ChannelPostComment newComment = new  ChannelPostComment();

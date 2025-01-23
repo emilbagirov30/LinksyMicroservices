@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,14 +22,13 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserPostCommentRepository userPostCommentRepository;
     private final UserPostLikeRepository userPostLikeRepository;
-
+    private final LinksyCacheManager linksyCacheManager;
 
 
     @KafkaListener(topics = "postResponse", groupId = "group_id_post", containerFactory = "postKafkaResponseKafkaListenerContainerFactory")
     public void consumePost(PostKafkaResponse response) {
         Long authorId = response.getAuthorId();
-        User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User author = linksyCacheManager.getUserById(authorId);
         if (response.getPostId()==null) {
             Post newPost = new Post();
             newPost.setUser(author);
@@ -58,8 +56,7 @@ public class PostService {
 
 
     public List<PostResponse> getUserPosts(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
 
         List<Post> posts = postRepository.findByUser(user);
 
@@ -118,10 +115,8 @@ public class PostService {
 
 
     public List<PostResponse> getOutsiderUserPosts(Long finderId,Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User finder = userRepository.findById(finderId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
+        User finder = linksyCacheManager.getUserById(finderId);
 
         List<Post> posts = postRepository.findByUser(user);
 
@@ -152,8 +147,7 @@ public class PostService {
 
     @Transactional
 public void deletePost (Long userId,long postId) {
-    User user = userRepository.findById(userId)
-            .orElseThrow(() -> new NotFoundException("User not found"));
+    User user = linksyCacheManager.getUserById(userId);
     Post post = postRepository.findById(postId)
             .orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getUser().getId().equals(user.getId()))
@@ -168,8 +162,7 @@ public void deletePost (Long userId,long postId) {
 
 
   public void addLike (Long userId,Long postId){
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new NotFoundException("User not found"));
+      User user = linksyCacheManager.getUserById(userId);
       Post post = postRepository.findById(postId)
               .orElseThrow(() -> new IllegalArgumentException("Post not found"));
       UserPostLike like = new UserPostLike();
@@ -180,8 +173,7 @@ public void deletePost (Long userId,long postId) {
 
 
   public void deleteLike (Long userId,Long postId){
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new NotFoundException("User not found"));
+      User user = linksyCacheManager.getUserById(userId);
       Post post = postRepository.findById(postId)
               .orElseThrow(() -> new IllegalArgumentException("Post not found"));
       UserPostLike like = userPostLikeRepository.findByPostAndUser(post,user);
@@ -189,8 +181,7 @@ public void deletePost (Long userId,long postId) {
   }
 
   public void addComment (Long userId,CommentRequest comment){
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new NotFoundException("User not found"));
+      User user = linksyCacheManager.getUserById(userId);
       Post post = postRepository.findById(comment.getPostId())
               .orElseThrow(() -> new IllegalArgumentException("Post not found"));
       UserPostComment newComment = new UserPostComment();

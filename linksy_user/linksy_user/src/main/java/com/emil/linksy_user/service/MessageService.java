@@ -34,14 +34,13 @@ public class MessageService {
     private final ChatRepository chatRepository;
     @Autowired
     private EntityManager entityManager;
-
+    private final LinksyCacheManager linksyCacheManager;
     @KafkaListener(topics = "messageResponse", groupId = "group_id_message", containerFactory = "messageKafkaResponseKafkaListenerContainerFactory")
     @Transactional
     public void consumeMessage(MessageKafkaResponse response) {
         Long senderId = response.getSenderId();
         Long chatId = response.getChatId();
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User sender = linksyCacheManager.getUserById(senderId);
         Message message = new Message();
         message.setSender(sender);
         message.setText(response.getText());
@@ -54,8 +53,7 @@ public class MessageService {
         Chat chat;
         if(chatId==null) {
             Long recipientId = response.getRecipientId();
-            User recipient = userRepository.findById(recipientId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User recipient = linksyCacheManager.getUserById(recipientId);
             chat = chatService.findOrCreatePersonalChat(sender, recipient);
             message.setChat(chat);
             messageRepository.save(message);
@@ -85,8 +83,7 @@ public class MessageService {
     }
 
     public List<MessageResponse> getUserMessages(Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         List<ChatMember> chatMembers= chatMemberRepository.findByUser(user);
         List<Chat> chats = chatMembers.stream().map(ChatMember::getChat).toList();
         List<Message> messages = chats.stream()
@@ -113,8 +110,7 @@ public class MessageService {
 
 
     public List<MessageResponse> getUserMessagesByChat(Long userId,Long chatId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
      if (!chatMemberRepository.existsByChatAndUser(chat,user) )
@@ -188,8 +184,7 @@ public class MessageService {
 
 
     public void sendStatus (Status status){
-        User sender = userRepository.findById(status.getUserId())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User sender = linksyCacheManager.getUserById(status.getUserId());
         Chat chat = chatRepository.findById(status.getChatId())
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
         var members = chatMemberRepository.findByChat(chat);

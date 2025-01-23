@@ -29,8 +29,7 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtToken jwtToken;
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
-
-
+    private final LinksyCacheManager linksyCacheManager;
 
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
@@ -129,12 +128,12 @@ public class UserService {
     }
 
     public UserProfileData getUserProfileData(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         return new UserProfileData(userId,user.getUsername(),user.getLink(), user.getAvatarUrl());
     }
 
     public AllUserData getAllUserData(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
         String birthday = null;
         if (user.getBirthday()!=null)
@@ -147,60 +146,60 @@ public class UserService {
         Long userId = response.getId();
         String avatarUrl = response.getUrl();
         synchronized (getUserLock(userId)) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User user = linksyCacheManager.getUserById(userId);
             user.setAvatarUrl(avatarUrl);
             userRepository.save(user);
+            linksyCacheManager.cacheUser(user);
         }
     }
 
     public void updateUsername(Long userId, String newUsername) {
         synchronized (getUserLock(userId)) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User user = linksyCacheManager.getUserById(userId);
             user.setUsername(newUsername);
             userRepository.save(user);
+            linksyCacheManager.cacheUser(user);
         }
     }
 
     public void updateLink(Long userId, String link) {
         synchronized (getUserLock(userId)) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User user = linksyCacheManager.getUserById(userId);
             if (userRepository.existsByLinkAndIdNot(link, userId)) {
                 throw new LinkAlreadyExistsException("Link is already in use by another user");
             }
             user.setLink(link);
             userRepository.save(user);
+            linksyCacheManager.cacheUser(user);
         }
     }
 
     public void updateBirthday(Long userId, String birthday) throws ParseException {
         synchronized (getUserLock(userId)) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User user =  linksyCacheManager.getUserById(userId);
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
             Date newBirthday = dateFormat.parse(birthday);
             user.setBirthday(newBirthday);
             userRepository.save(user);
+            linksyCacheManager.cacheUser(user);
         }
     }
 
     public void deleteAvatar(Long userId) {
         synchronized (getUserLock(userId)) {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User user = linksyCacheManager.getUserById(userId);
             user.setAvatarUrl("null");
             userRepository.save(user);
+            linksyCacheManager.cacheUser(user);
         }
     }
     public void changePassword(Long userId, ChangePassword changePassword) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
         if(correctPassword) {
             user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
             userRepository.save(user);
+            linksyCacheManager.cacheUser(user);
         }else throw new NotFoundException("Invalid password");
 
     }
@@ -211,17 +210,19 @@ public class UserService {
     }
 
     public MessageMode getUserMessageMode(Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         return user.getMessageMode();
     }
 
     public void setMessageMode (Long userId,MessageMode type){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         user.setMessageMode(type);
         userRepository.save(user);
+        linksyCacheManager.cacheUser(user);
     }
+
+
+
 
 }
 

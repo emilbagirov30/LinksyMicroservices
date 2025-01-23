@@ -1,14 +1,11 @@
 package com.emil.linksy_user.service;
 
-import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +18,9 @@ public class FeedService {
     private final SubscriptionsRepository subscriptionsRepository;
     private final PostRepository postRepository;
       private final PostService postService;
-
+    private final LinksyCacheManager linksyCacheManager;
     public List<ChannelPostResponse> getAllChannelPosts (Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         var members = channelMemberRepository.findByUser(user);
         var channels = members.stream().map(ChannelMember::getChannel).toList();
         var filterChannels = channels.stream().filter(channel -> !channel.getOwner().getId().equals(userId)).toList();
@@ -37,8 +33,7 @@ public class FeedService {
 
 
     public List<PostResponse> getAllSubscriptionsPosts (Long finderId){
-        User finder = userRepository.findById(finderId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User finder = linksyCacheManager.getUserById(finderId);
         List<Subscriptions> subscriptionsList = subscriptionsRepository.findAllBySubscriber(finder);
         List<User> subscriptions = subscriptionsList.stream()
                 .map(Subscriptions::getUser)

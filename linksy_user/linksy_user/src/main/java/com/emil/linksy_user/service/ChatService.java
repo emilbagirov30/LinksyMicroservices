@@ -5,7 +5,6 @@ import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.ChatMemberRepository;
 import com.emil.linksy_user.repository.ChatRepository;
 import com.emil.linksy_user.repository.MessageRepository;
-import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -24,9 +23,9 @@ import java.util.stream.Collectors;
 public class ChatService {
     private final ChatRepository chatRepository;
     private final ChatMemberRepository chatMemberRepository;
-    private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final LinksyCacheManager linksyCacheManager;
     public Chat findOrCreatePersonalChat(User user1, User user2) {
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> createNewChat(user1, user2));
@@ -50,7 +49,7 @@ public class ChatService {
     }
 
     public List<ChatResponse> getUserChats (Long userId){
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         List<ChatMember> chatMembers = chatMemberRepository.findByUser(user);
         List<Chat> chats = chatMembers.stream()
                 .map(ChatMember::getChat)
@@ -166,10 +165,8 @@ public class ChatService {
 
 
     public Long getChatId(Long user1Id, Long user2Id) {
-        User user1 = userRepository.findById(user1Id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        User user2 = userRepository.findById(user2Id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user1 = linksyCacheManager.getUserById(user1Id);
+        User user2 = linksyCacheManager.getUserById(user2Id);
         List<ChatMember> user1Chats = chatMemberRepository.findByUser(user1);
         List<ChatMember> user2Chats = chatMemberRepository.findByUser(user2);
 
@@ -207,8 +204,7 @@ public class ChatService {
 
 
     public List<UserResponse> getGroupMembers (Long userId, Long chatId) {
-        User requester = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User requester = linksyCacheManager.getUserById(userId);
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
 
@@ -228,8 +224,7 @@ public class ChatService {
 
 
     public GroupResponse getGroupData (Long userId, Long chatId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(userId);
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
             return new GroupResponse(chat.getName(), chat.getAvatarUrl());
@@ -250,8 +245,7 @@ public class ChatService {
         List<ChatMember> chatMembers = new ArrayList<>();
 
         for (Long memberId : members) {
-            User user = userRepository.findById(memberId)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
+            User user = linksyCacheManager.getUserById(memberId);
 
             ChatMember chatMember = new ChatMember();
             chatMember.setChat(chat);
@@ -272,8 +266,7 @@ public class ChatService {
     @KafkaListener(topics = "groupEditResponse", groupId = "group_id_group_edit", containerFactory = "groupEditKafkaResponseKafkaListenerContainerFactory")
     @Transactional
     public void consumeGroupEdit(GroupEditDataKafkaResponse response) {
-        User user = userRepository.findById(response.getUserId())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = linksyCacheManager.getUserById(response.getUserId());
         Chat chat = chatRepository.findById(response.getGroupId())
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
         chat.setName(response.getName());
