@@ -96,7 +96,7 @@ public class UserService {
                 .map(user -> {
                     String accessToken = jwtToken.generateAccessToken(user.getId().toString());
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
-                    String wsToken = UUID.randomUUID().toString();
+                    String wsToken = UUID.randomUUID().toString() + UUID.randomUUID();
                     user.setWsToken(wsToken);
                     user.setRefreshToken(refreshToken);
                     userRepository.save(user);
@@ -110,21 +110,21 @@ public class UserService {
             throw new InvalidTokenException("Invalid refresh token");
 
          Long userId = jwtToken.extractUserId(refreshToken, TokenType.REFRESH);
-         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+         User user = linksyCacheManager.getUserById(userId);
          user.setOnline(true);
          if (!user.getRefreshToken().equals(refreshToken)) throw new InvalidTokenException("Invalid refresh token");
         String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
         String newRefreshToken = refreshToken;
+        String newWsToken = user.getWsToken();
         if (jwtToken.needsRefreshRenewal(refreshToken)) {
             newRefreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
+            newWsToken = UUID.randomUUID().toString() + UUID.randomUUID();
             user.setRefreshToken(newRefreshToken);
+            user.setWsToken(newWsToken);
             userRepository.save(user);
         }
-        String wsToken = UUID.randomUUID().toString();
-           user.setWsToken(wsToken);
         userRepository.save(user);
-        return new Token(newAccessToken, newRefreshToken,wsToken);
+        return new Token(newAccessToken, newRefreshToken,newWsToken);
     }
 
     public UserProfileData getUserProfileData(Long userId) {
