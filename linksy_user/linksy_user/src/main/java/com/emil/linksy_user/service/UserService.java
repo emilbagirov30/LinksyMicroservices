@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -96,10 +97,11 @@ public class UserService {
                 .map(user -> {
                     String accessToken = jwtToken.generateAccessToken(user.getId().toString());
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
-                    user.setAccessToken(accessToken);
+                    String wsToken = UUID.randomUUID().toString();
+                    user.setWsToken(wsToken);
                     user.setRefreshToken(refreshToken);
                     userRepository.save(user);
-                   return new Token(accessToken,refreshToken);
+                   return new Token(accessToken,refreshToken,wsToken);
                 })
                 .orElseThrow(() -> new NotFoundException("Invalid email or password"));
     }
@@ -111,6 +113,7 @@ public class UserService {
          Long userId = jwtToken.extractUserId(refreshToken, TokenType.REFRESH);
          User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
+         user.setOnline(true);
          if (!user.getRefreshToken().equals(refreshToken)) throw new InvalidTokenException("Invalid refresh token");
         String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
         String newRefreshToken = refreshToken;
@@ -119,9 +122,10 @@ public class UserService {
             user.setRefreshToken(newRefreshToken);
             userRepository.save(user);
         }
-           user.setAccessToken(newAccessToken);
+        String wsToken = UUID.randomUUID().toString();
+           user.setWsToken(wsToken);
         userRepository.save(user);
-        return new Token(newAccessToken, newRefreshToken);
+        return new Token(newAccessToken, newRefreshToken,wsToken);
     }
 
     public UserProfileData getUserProfileData(Long userId) {

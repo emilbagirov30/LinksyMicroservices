@@ -78,7 +78,7 @@ public class MessageService {
         var members =  chatMemberRepository.findByChat(chat);
         var users =members.stream().map(ChatMember::getUser).distinct().toList();
         users.forEach( user -> {
-            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/" +  chat.getId() + "/", response);
+            messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/" +  chat.getId() + "/", response);
                 }
         );
         chatService.sendNewChat(chat.getId());
@@ -148,7 +148,7 @@ public class MessageService {
         messageRepository.saveAll(filterMessages);
 
         for (Message m : filterMessages) {
-          messagingTemplate.convertAndSendToUser(m.getSender().getAccessToken(), "/queue/messages/viewed/" + chatId + "/", m.getId());
+          messagingTemplate.convertAndSendToUser(m.getSender().getWsToken(), "/queue/messages/viewed/" + chatId + "/", m.getId());
    }
     }
 
@@ -163,7 +163,7 @@ public class MessageService {
         messageRepository.delete(message);
 
         for (User user: users){
-            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/deleted/" + chat.getId() + "/", messageId);
+            messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/deleted/" + chat.getId() + "/", messageId);
         }
 
     }
@@ -181,9 +181,25 @@ public class MessageService {
         messageRepository.save(message);
             var response = new EditMessageResponse(messageId,text);
         for (User user: users){
-            messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/messages/edited/" + chat.getId() + "/", response);
+            messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/edited/" + chat.getId() + "/", response);
         }
 
+    }
+
+
+    public void sendStatus (Status status){
+        User sender = userRepository.findById(status.getUserId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        Chat chat = chatRepository.findById(status.getChatId())
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        var members = chatMemberRepository.findByChat(chat);
+        var users = members.stream().map(ChatMember::getUser).toList();
+        var response = new StatusResponse(sender.getUsername(),status.getStatus());
+        for (User user: users){
+            if (!Objects.equals(user.getId(),status.getUserId())) {
+                messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/status/" + chat.getId() + "/", response);
+            }
+        }
     }
 
 

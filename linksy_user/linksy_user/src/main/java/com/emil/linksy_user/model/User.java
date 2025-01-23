@@ -47,8 +47,8 @@ public class User {
     private String link;
     @Column(name = "refresh_token")
     private String RefreshToken;
-    @Column(name = "access_token")
-    private String AccessToken;
+    @Column(name = "ws_token")
+    private String wsToken;
     @Temporal(TemporalType.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
     private Date birthday;

@@ -1,4 +1,6 @@
 package com.emil.linksy_user.model;
+
+import com.emil.linksy_user.util.MessageStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -6,8 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Token {
-    private String accessToken;
-    private String refreshToken;
-    private String wsToken;
+public class StatusResponse {
+    private String name;
+    private MessageStatus status;
 }

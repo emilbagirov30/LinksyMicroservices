@@ -134,7 +134,7 @@ public class ChatService {
                         .filter(message -> !message.getViewed() && !message.getSender().getId().equals(user.getId()))
                         .count();
                 response.setUnreadMessagesCount(unreadMessagesCount);
-                messagingTemplate.convertAndSendToUser(user.getAccessToken(), "/queue/chats/", response);
+                messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/chats/", response);
             }
         }else {
             List<User> members = chatMembers.stream()
@@ -152,10 +152,10 @@ public class ChatService {
                     member2.getUsername(), lastMessageText,dateLast,unreadMessagesCount1);
             var response2 = new ChatResponse(chat.getId(), member1.getId(),senderId, false, member1.getAvatarUrl(),
                     member1.getUsername(), lastMessageText,dateLast,unreadMessagesCount2);
-                messagingTemplate.convertAndSendToUser(member1.getAccessToken(), "/queue/count/", response1);
-                messagingTemplate.convertAndSendToUser(member2.getAccessToken(), "/queue/count/", response2);
-                messagingTemplate.convertAndSendToUser(member1.getAccessToken(), "/queue/chats/", response1);
-                messagingTemplate.convertAndSendToUser(member2.getAccessToken(), "/queue/chats/", response2);
+                messagingTemplate.convertAndSendToUser(member1.getWsToken(), "/queue/count/", response1);
+                messagingTemplate.convertAndSendToUser(member2.getWsToken(), "/queue/count/", response2);
+                messagingTemplate.convertAndSendToUser(member1.getWsToken(), "/queue/chats/", response1);
+                messagingTemplate.convertAndSendToUser(member2.getWsToken(), "/queue/chats/", response2);
 
         }
     }
