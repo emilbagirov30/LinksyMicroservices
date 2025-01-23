@@ -139,4 +139,5 @@ public class PeopleController {
     public ResponseEntity<String> handleUserBlockedException(UserBlockedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
+
 }

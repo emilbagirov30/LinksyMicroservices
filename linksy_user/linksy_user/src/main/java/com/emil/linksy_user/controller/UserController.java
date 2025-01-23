@@ -140,4 +140,5 @@ class UserController {
     public ResponseEntity<Void> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
     }
+
 }

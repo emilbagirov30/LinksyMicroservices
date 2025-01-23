@@ -1,7 +1,9 @@
 package com.emil.linksy_user.controller;
 
+import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.service.ChannelService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -164,10 +166,31 @@ private final ChannelService channelService;
         var comments = channelService.getAllPostComments(postId);
         return ResponseEntity.ok(comments);
     }
+
     @DeleteMapping("/post/comment/delete")
     public ResponseEntity<Void> deleteComment(@RequestParam("id") Long commentId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         channelService.deleteComment(userId,commentId);
         return ResponseEntity.ok().build();
+    }
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
+    }
+    @ExceptionHandler(LinkAlreadyExistsException.class)
+    public ResponseEntity<Void> handleLinkAlreadyExist(LinkAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+    }
+    @ExceptionHandler(InvalidVerificationCodeException.class)
+    public ResponseEntity<Void> handleInvalidVerificationCode(InvalidVerificationCodeException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+    }
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<Void> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+    }
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Void> handleInvalidToken(InvalidTokenException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
     }
 }

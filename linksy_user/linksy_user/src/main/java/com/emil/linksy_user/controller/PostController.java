@@ -35,7 +35,7 @@ public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
     @PostMapping("/like/add/{id}")
     public ResponseEntity<Void> addLike(@PathVariable ("id") Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-       postService.addLike(userId,postId);
+        postService.addLike(userId,postId);
         return ResponseEntity.ok().build();
     }
 
