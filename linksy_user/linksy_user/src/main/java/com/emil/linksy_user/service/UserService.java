@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -98,6 +97,12 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .filter(user -> validatePassword(password, user.getPassword()))
                 .map(user -> {
+                    if (user.getBlocked()) {
+                        user.setRefreshToken(null);
+                        user.setWsToken(null);
+                        user.setOnline(false);
+                        userRepository.save(user);
+                        throw new BlockedException("User is blocked");}
                     String accessToken = jwtToken.generateAccessToken(user.getId().toString());
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
                     String wsToken = UUID.randomUUID().toString() + UUID.randomUUID();
@@ -114,8 +119,11 @@ public class UserService {
     public Token refreshAccessToken(String refreshToken) {
         if (!jwtToken.validateRefreshToken(refreshToken)) {throw new InvalidTokenException("Invalid refresh token");}
          Long userId = jwtToken.extractUserId(refreshToken, TokenType.REFRESH);
-         User user = linksyCacheManager.getUserById(userId);
-         user.setOnline(true);
+         User user = userRepository.findById(userId)
+                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if(user.getBlocked()) throw new BlockedException("User is blocked");
+
+        user.setOnline(true);
         user.setLastActive(LocalDateTime.now());
          if (!user.getRefreshToken().equals(refreshToken)) {throw new InvalidTokenException("Invalid refresh token");}
         String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
@@ -199,17 +207,19 @@ public class UserService {
             linksyCacheManager.cacheUser(user);
         }
     }
-    public void changePassword(Long userId, ChangePassword changePassword) {
+    public Token changePassword(Long userId, ChangePassword changePassword) {
         User user = linksyCacheManager.getUserById(userId);
         boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
-        if(correctPassword) {
+        if(!correctPassword) {throw new NotFoundException("Invalid password");}
             user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
-            String newRefreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
-            user.setRefreshToken(newRefreshToken);
+            String accessToken = jwtToken.generateAccessToken(String.valueOf(userId));
+            String refreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
+            String wsToken = UUID.randomUUID().toString() + UUID.randomUUID();
+            user.setWsToken(wsToken);
+            user.setRefreshToken(refreshToken);
             userRepository.save(user);
             linksyCacheManager.cacheUser(user);
-        }else throw new NotFoundException("Invalid password");
-
+            return new Token (accessToken,refreshToken,wsToken);
     }
 
     private Object getUserLock(Long userId) {

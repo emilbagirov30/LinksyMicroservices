@@ -1,5 +1,6 @@
 package com.emil.linksy_user.service;
 
+import com.emil.linksy_user.exception.BlockedException;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
@@ -115,7 +116,7 @@ public class ChannelService {
     public ChannelPageData getChannelPageData(Long finderId, Long channelId) {
         User finder = linksyCacheManager.getUserById(finderId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
-
+        if(channel.getBlocked()) throw new BlockedException("Channel is blocked");
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         Long memberCount = (long) channelMembers.size();
         boolean isMember = channelMembers.stream()

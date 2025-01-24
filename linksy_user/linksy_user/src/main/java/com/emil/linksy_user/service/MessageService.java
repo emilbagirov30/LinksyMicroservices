@@ -1,7 +1,7 @@
 package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
-import com.emil.linksy_user.exception.UserBlockedException;
+import com.emil.linksy_user.exception.BlacklistException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
 import jakarta.persistence.EntityManager;
@@ -52,7 +52,7 @@ public class MessageService {
         if(chatId==null) {
             Long recipientId = response.getRecipientId();
             User recipient = linksyCacheManager.getUserById(recipientId);
-            if (blackListRepository.existsByInitiatorAndBlocked(recipient,sender)) throw new UserBlockedException("User is blocked");
+            if (blackListRepository.existsByInitiatorAndBlocked(recipient,sender)) throw new BlacklistException("User is blocked");
             chat = chatService.findOrCreatePersonalChat(sender, recipient);
             message.setChat(chat);
             messageRepository.save(message);
@@ -66,7 +66,7 @@ public class MessageService {
                Long id2 =  members.get(1).getUser().getId();
                var recipientId = Objects.equals(id1, senderId) ? id2 :id1;
                var recipient = linksyCacheManager.getUserById(recipientId);
-               if (blackListRepository.existsByInitiatorAndBlocked(recipient,sender)) throw new UserBlockedException("User is blocked");
+               if (blackListRepository.existsByInitiatorAndBlocked(recipient,sender)) throw new BlacklistException("User is blocked");
            }
             message.setChat(chat);
             messageRepository.save(message);

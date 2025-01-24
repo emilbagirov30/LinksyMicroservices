@@ -101,10 +101,10 @@ class UserController {
     }
 
     @PatchMapping("/change_password")
-    public ResponseEntity<Void> changePassword(@RequestBody ChangePassword changePassword) {
+    public ResponseEntity<Token> changePassword(@RequestBody ChangePassword changePassword) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        userService.changePassword(userId,changePassword);
-        return ResponseEntity.ok().build();
+        var token = userService.changePassword(userId,changePassword);
+        return ResponseEntity.ok(token);
     }
 
     @GetMapping("/message_mode")
@@ -140,5 +140,8 @@ class UserController {
     public ResponseEntity<Void> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
     }
-
+    @ExceptionHandler(BlockedException.class)
+    public ResponseEntity<Void> handleInvalidToken(BlockedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403
+    }
 }

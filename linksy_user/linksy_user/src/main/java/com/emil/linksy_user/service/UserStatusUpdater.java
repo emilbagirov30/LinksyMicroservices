@@ -23,7 +23,6 @@ public class UserStatusUpdater {
     public void updateUserStatus() {
         List<User> users = userRepository.findAll();
         LocalDateTime now = LocalDateTime.now();
-        System.out.println("ааа");
         for (User user : users) {
             if (user.getLastActive() != null &&
                     user.getOnline() &&

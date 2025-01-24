@@ -1,7 +1,8 @@
 package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
-import com.emil.linksy_user.exception.UserBlockedException;
+import com.emil.linksy_user.exception.BlacklistException;
+import com.emil.linksy_user.exception.BlockedException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.BlackListRepository;
 import com.emil.linksy_user.repository.SubscriptionsRepository;
@@ -25,12 +26,14 @@ public class PeopleService {
     private final LinksyCacheManager linksyCacheManager;
     public List<UserResponse> findByLink(Long userId, String startsWith) {
         List<User> userList = userRepository.findByLinkStartingWith(startsWith);
-        return mapToUserResponse(userId, userList);
+        var filterUer = userList.stream().filter(user -> !user.getBlocked()).toList();
+        return mapToUserResponse(userId, filterUer);
     }
 
     public List<UserResponse> findByUsername(Long userId, String startsWith) {
         List<User> userList = userRepository.findByUsernameStartingWith(startsWith);
-        return mapToUserResponse(userId, userList);
+        var filterUer = userList.stream().filter(user -> !user.getBlocked()).toList();
+        return mapToUserResponse(userId, filterUer);
     }
 
     private List<UserResponse> mapToUserResponse(Long userId, List<User> users) {
@@ -87,8 +90,9 @@ public class PeopleService {
     public UserPageData getUserPageData (Long finderId,Long id){
         User finder = linksyCacheManager.getUserById(finderId);
         User user = linksyCacheManager.getUserById(id);
+        if(user.getBlocked()) throw new BlockedException("User is blocked");
         boolean isBlockedByPageOwner = isBlocked(finder,user);
-        if (isBlockedByPageOwner) throw new UserBlockedException("Access is denied: you are blocked by the owner of the page.");
+        if (isBlockedByPageOwner) throw new BlacklistException("Access is denied: you are blocked by the owner of the page.");
         String username = user.getUsername();
         String link = user.getLink();
         String avatarUrl = user.getAvatarUrl();
@@ -102,7 +106,6 @@ public class PeopleService {
 
         Long subscriptionsCount = subscriptionsRepository.countBySubscriber(user);
         Long subscribersCount = subscriptionsRepository.countByUser(user);
-
         Boolean isPageOwnerBlockedByViewer = isBlocked(user,finder);
         return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,subscriptionsCount,subscribersCount, isPageOwnerBlockedByViewer,user.getMessageMode(),isSubscription);
     }

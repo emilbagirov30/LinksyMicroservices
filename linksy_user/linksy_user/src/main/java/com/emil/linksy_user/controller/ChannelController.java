@@ -193,4 +193,8 @@ private final ChannelService channelService;
     public ResponseEntity<Void> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
     }
+    @ExceptionHandler(BlockedException.class)
+    public ResponseEntity<Void> handleBlockedException(BlockedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403
+    }
 }

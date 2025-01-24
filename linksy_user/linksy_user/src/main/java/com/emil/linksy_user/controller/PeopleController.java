@@ -1,8 +1,8 @@
 package com.emil.linksy_user.controller;
 
-import com.emil.linksy_user.exception.InvalidTokenException;
 import com.emil.linksy_user.exception.NotFoundException;
-import com.emil.linksy_user.exception.UserBlockedException;
+import com.emil.linksy_user.exception.BlacklistException;
+import com.emil.linksy_user.exception.BlockedException;
 import com.emil.linksy_user.model.MomentResponse;
 import com.emil.linksy_user.model.PostResponse;
 import com.emil.linksy_user.model.UserPageData;
@@ -135,9 +135,12 @@ public class PeopleController {
     }
 
 
-    @ExceptionHandler(UserBlockedException.class)
-    public ResponseEntity<String> handleUserBlockedException(UserBlockedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    @ExceptionHandler(BlacklistException.class)
+    public ResponseEntity<String> handleBlacklistException(BlacklistException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage()); // 403
     }
-
+    @ExceptionHandler(BlockedException.class)
+    public ResponseEntity<Void> handleUserBlockedException(BlockedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
+    }
 }
