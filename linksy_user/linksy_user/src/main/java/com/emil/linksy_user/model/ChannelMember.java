@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "linksy_channel_members")
+@Table(name = "linksy_channel_members",  uniqueConstraints = @UniqueConstraint(columnNames = {"channel_id", "member_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

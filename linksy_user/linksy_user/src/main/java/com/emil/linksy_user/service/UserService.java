@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +32,7 @@ public class UserService {
     private final JwtToken jwtToken;
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
     private final LinksyCacheManager linksyCacheManager;
-
+ private final UserStatusUpdater userStatusUpdater;
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
@@ -66,6 +68,7 @@ public class UserService {
         userRepository.save(user);
         pendingUsers.remove(email);
         CodeGenerator.removeCode(email);
+        linksyCacheManager.cacheUser(user);
     }
 
     public void requestPasswordChange(String email) {
@@ -84,6 +87,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         CodeGenerator.removeCode(email);
+        linksyCacheManager.cacheUser(user);
     }
 
     public boolean validatePassword(String rawPassword, String encodedPassword) {
@@ -99,20 +103,21 @@ public class UserService {
                     String wsToken = UUID.randomUUID().toString() + UUID.randomUUID();
                     user.setWsToken(wsToken);
                     user.setRefreshToken(refreshToken);
+                    user.setOnline(true);
                     userRepository.save(user);
+                    linksyCacheManager.cacheUser(user);
                    return new Token(accessToken,refreshToken,wsToken);
                 })
                 .orElseThrow(() -> new NotFoundException("Invalid email or password"));
     }
 
     public Token refreshAccessToken(String refreshToken) {
-        if (!jwtToken.validateRefreshToken(refreshToken))
-            throw new InvalidTokenException("Invalid refresh token");
-
+        if (!jwtToken.validateRefreshToken(refreshToken)) {throw new InvalidTokenException("Invalid refresh token");}
          Long userId = jwtToken.extractUserId(refreshToken, TokenType.REFRESH);
          User user = linksyCacheManager.getUserById(userId);
          user.setOnline(true);
-         if (!user.getRefreshToken().equals(refreshToken)) throw new InvalidTokenException("Invalid refresh token");
+        user.setLastActive(LocalDateTime.now());
+         if (!user.getRefreshToken().equals(refreshToken)) {throw new InvalidTokenException("Invalid refresh token");}
         String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
         String newRefreshToken = refreshToken;
         String newWsToken = user.getWsToken();
@@ -121,9 +126,10 @@ public class UserService {
             newWsToken = UUID.randomUUID().toString() + UUID.randomUUID();
             user.setRefreshToken(newRefreshToken);
             user.setWsToken(newWsToken);
-            userRepository.save(user);
         }
+
         userRepository.save(user);
+        linksyCacheManager.cacheUser(user);
         return new Token(newAccessToken, newRefreshToken,newWsToken);
     }
 

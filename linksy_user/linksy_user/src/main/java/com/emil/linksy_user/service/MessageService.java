@@ -1,11 +1,9 @@
 package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
+import com.emil.linksy_user.exception.UserBlockedException;
 import com.emil.linksy_user.model.*;
-import com.emil.linksy_user.repository.ChatMemberRepository;
-import com.emil.linksy_user.repository.ChatRepository;
-import com.emil.linksy_user.repository.MessageRepository;
-import com.emil.linksy_user.repository.UserRepository;
+import com.emil.linksy_user.repository.*;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MessageService {
-    private final UserRepository userRepository;
+    private final BlackListRepository blackListRepository;
     private final MessageRepository messageRepository;
     private final ChatService chatService;
     private final ChatMemberRepository chatMemberRepository;
@@ -54,12 +52,22 @@ public class MessageService {
         if(chatId==null) {
             Long recipientId = response.getRecipientId();
             User recipient = linksyCacheManager.getUserById(recipientId);
+            if (blackListRepository.existsByInitiatorAndBlocked(recipient,sender)) throw new UserBlockedException("User is blocked");
             chat = chatService.findOrCreatePersonalChat(sender, recipient);
             message.setChat(chat);
             messageRepository.save(message);
         }else{
            chat = chatRepository.findById(chatId)
                     .orElseThrow(() -> new NotFoundException("Chat not found"));
+           var members = chatMemberRepository.findByChat(chat);
+
+           if (members.size()==2){
+               Long id1 = members.get(0).getUser().getId();
+               Long id2 =  members.get(1).getUser().getId();
+               var recipientId = Objects.equals(id1, senderId) ? id2 :id1;
+               var recipient = linksyCacheManager.getUserById(recipientId);
+               if (blackListRepository.existsByInitiatorAndBlocked(recipient,sender)) throw new UserBlockedException("User is blocked");
+           }
             message.setChat(chat);
             messageRepository.save(message);
 

@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ChannelPostResponse {
     private Long postId;
+    private Long channelId;
     private String channelName;
     private String channelAvatarUrl;
     private String text;

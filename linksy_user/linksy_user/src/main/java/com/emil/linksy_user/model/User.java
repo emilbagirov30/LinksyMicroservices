@@ -9,6 +9,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -24,6 +26,7 @@ public class User implements Serializable {
 
     @NotBlank
     @Email
+    @Column(unique = true)
     private String email;
 
     @NotBlank
@@ -45,6 +48,7 @@ public class User implements Serializable {
 
     @Column(name = "avatar_url")
     private String avatarUrl;
+    @Column(unique = true)
     private String link;
     @Column(name = "refresh_token")
     private String RefreshToken;
@@ -62,4 +66,7 @@ public class User implements Serializable {
     private Boolean confirmed;
     private Boolean blocked;
     private Boolean deleted;
+
+    @Column(name = "last_active")
+    private LocalDateTime lastActive;
 }

@@ -28,5 +28,7 @@ public class Channel implements Serializable {
     @NotNull
     @Enumerated(EnumType.STRING)
     private ChannelType type;
+    private Boolean confirmed;
+    private Boolean blocked;
 
 }

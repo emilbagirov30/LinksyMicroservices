@@ -16,4 +16,5 @@ public class ChannelResponse {
     private String avatarUrl;
     private Double rating;
     private ChannelType type;
+    private Boolean confirmed;
 }

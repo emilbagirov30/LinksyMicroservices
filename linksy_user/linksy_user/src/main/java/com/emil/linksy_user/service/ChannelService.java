@@ -88,7 +88,7 @@ public class ChannelService {
                     .orElse(0.0);
             return new ChannelResponse(channel.getId(), channel.getOwner().getId(), channel.getName(),
                     channel.getLink(), channel.getAvatarUrl(), Math.round(averageRating * 100.0) / 100.0,
-                    channel.getType());
+                    channel.getType(),channel.getConfirmed());
         }).toList();
     }
 
@@ -106,7 +106,7 @@ public class ChannelService {
                     .average()
                     .orElse(0.0);
             return new ChannelResponse(channel.getId(), channel.getOwner().getId(), channel.getName(),
-                    channel.getLink(), channel.getAvatarUrl(), Math.round(averageRating * 100.0) / 100.0, channel.getType());
+                    channel.getLink(), channel.getAvatarUrl(), Math.round(averageRating * 100.0) / 100.0, channel.getType(),channel.getConfirmed());
 
         }).toList();
     }
@@ -119,7 +119,7 @@ public class ChannelService {
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         Long memberCount = (long) channelMembers.size();
         boolean isMember = channelMembers.stream()
-                .anyMatch(channelMember -> channelMember.getUser().equals(finder));
+                .anyMatch(channelMember -> channelMember.getUser().getId().equals(finderId));
 
         var type = channel.getType();
         String avatarUrl = channel.getAvatarUrl();
@@ -128,7 +128,7 @@ public class ChannelService {
         String link = channel.getLink();
 
         var requests = channelSubscriptionsRequestRepository.findByChannel(channel);
-        Boolean isSubmitted = channelSubscriptionsRequestRepository.findByUserAndChannel(finder, channel) != null;
+        Boolean isSubmitted = channelSubscriptionsRequestRepository.findByUserAndChannel(finder, channel)!=null;
         var posts = channelPostRepository.findByChannel(channel);
 
         Double averageRating = posts.stream()
@@ -176,7 +176,7 @@ public class ChannelService {
     public List<UserResponse> getChannelSubscriptionRequests(Long userId, Long channelId) {
         User owner = linksyCacheManager.getUserById(userId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
-        if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
+        if (!channel.getOwner().getId().equals(owner.getId())) throw new SecurityException("User is not the owner channel");
         var candidates = channelSubscriptionsRequestRepository.findByChannel(channel);
 
         return candidates.stream().map(candidate -> {
@@ -275,7 +275,7 @@ public class ChannelService {
         Channel channel = linksyCacheManager.getChannelById(channelId);
         List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
         boolean isMember = channelMembers.stream()
-                .anyMatch(channelMember -> channelMember.getUser().equals(finder));
+                .anyMatch(channelMember -> channelMember.getUser().getId().equals(userId));
         if (!isMember && channel.getType().equals(ChannelType.PRIVATE)) {
             throw new SecurityException("User is not a member of the channel");
         }
@@ -309,6 +309,7 @@ public class ChannelService {
                     Long commentsCount = channelPostCommentsRepository.countByChannelPost(post);
                     return new ChannelPostResponse(
                             post.getId(),
+                            channelId,
                             channel.getName(),
                             channel.getAvatarUrl(),
                             post.getText(),
@@ -337,15 +338,14 @@ public class ChannelService {
                 .toList();
 
 
-        return voters.stream().anyMatch(voter -> voter.getUser().equals(user));
+        return voters.stream().anyMatch(voter -> voter.getUser().getId().equals(user.getId()));
     }
 
     public List<UserResponse> getChannelMembers(Long userId, Long channelId) {
-        User requester = linksyCacheManager.getUserById(userId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
         List<ChannelMember> members = channelMemberRepository.findByChannel(channel);
-        boolean isMember = members.stream().anyMatch(channelMember -> channelMember.getUser().equals(requester));
-        if (!isMember) throw new AccessDeniedException("User is not a member of this chat");
+        boolean isMember = members.stream().anyMatch(channelMember -> channelMember.getUser().getId().equals(userId));
+        if (!isMember) throw new AccessDeniedException("User is not a member of this channel");
 
         return members.stream()
                 .map(member -> {
@@ -356,10 +356,9 @@ public class ChannelService {
     }
 
     public void deletePost(Long userId, long postId) {
-        User user = linksyCacheManager.getUserById(userId);
         ChannelPost post = channelPostRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-        if (!post.getChannel().getOwner().equals(user)) {
+        if (!post.getChannel().getOwner().getId().equals(userId)) {
             throw new SecurityException("User does not own the post");
         }
         Poll poll = post.getPoll();
@@ -414,10 +413,8 @@ public class ChannelService {
 
 
     public ChannelManagementResponse getChannelManagementData(Long userId, Long channelId) {
-        User user = linksyCacheManager.getUserById(userId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
-
-        if (!channel.getOwner().equals(user))
+        if (!channel.getOwner().getId().equals(userId))
             throw new AccessDeniedException("User do not own the channel");
         return new ChannelManagementResponse(channel.getName(), channel.getLink(), channel.getAvatarUrl(), channel.getDescription(), channel.getType());
     }
@@ -503,6 +500,7 @@ public class ChannelService {
         Long commentsCount = channelPostCommentsRepository.countByChannelPost(post);
         return new ChannelPostResponse(
                 post.getId(),
+                post.getChannel().getId(),
                 post.getChannel().getName(),
                 post.getChannel().getAvatarUrl(),
                 post.getText(),

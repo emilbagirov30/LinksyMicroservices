@@ -47,7 +47,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/people/find/username").authenticated()
                 .requestMatchers("/api/people/{id}").authenticated()
                 .requestMatchers("/api/people/user_posts/{id}").authenticated()
-                .requestMatchers("/api/people/user_moments/{id}").authenticated()
                 .requestMatchers("/api/people/subscribe/{id}").authenticated()
                 .requestMatchers("/api/people/unsubscribe/{id}").authenticated()
                 .requestMatchers("/api/people/user_subscribers").authenticated()

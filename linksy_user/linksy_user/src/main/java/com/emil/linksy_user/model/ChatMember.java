@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
-@Table(name = "linksy_chat_members")
+@Table(name = "linksy_chat_members",  uniqueConstraints = @UniqueConstraint(columnNames = {"chat_id", "member_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

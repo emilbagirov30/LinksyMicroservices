@@ -70,6 +70,7 @@ public class PostService {
                         Boolean edited = post.getEdited();
                        return new PostResponse(
                         post.getId(),
+                        post.getUser().getId(),
                         user.getUsername(),
                         user.getAvatarUrl(),
                         post.getImageUrl(),
@@ -97,6 +98,7 @@ public class PostService {
                     Boolean edited = post.getEdited();
                     return new PostResponse(
                             post.getId(),
+                            post.getUser().getId(),
                             post.getUser().getUsername(),
                             post.getUser().getAvatarUrl(),
                             post.getImageUrl(),
@@ -130,6 +132,7 @@ public class PostService {
                     Boolean edited = post.getEdited();
                     return new PostResponse(
                             post.getId(),
+                            post.getUser().getId(),
                             user.getUsername(),
                             user.getAvatarUrl(),
                             post.getImageUrl(),
