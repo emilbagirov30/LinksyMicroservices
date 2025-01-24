@@ -10,9 +10,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FeedService {
-    private final ChannelRepository channelRepository;
     private final ChannelPostRepository channelPostRepository;
-    private final UserRepository userRepository;
     private final ChannelMemberRepository channelMemberRepository;
      private final ChannelService channelService;
     private final SubscriptionsRepository subscriptionsRepository;

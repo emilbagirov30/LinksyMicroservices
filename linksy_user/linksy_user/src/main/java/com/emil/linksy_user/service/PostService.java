@@ -38,7 +38,6 @@ public class PostService {
             newPost.setAudioUrl(response.getAudioUrl());
             newPost.setVoiceUrl(response.getVoiceUrl());
             newPost.setEdited(false);
-            newPost.setReposts(0L);
             postRepository.save(newPost);
         }else{
             Post editPost = postRepository.findById(response.getPostId())
@@ -80,8 +79,7 @@ public class PostService {
                         post.getText(),
                         dateFormat.format(post.getPublicationTime()),
                                likesCount,
-                        commentsCount,
-                        post.getReposts(), isLikedIt,edited
+                        commentsCount, isLikedIt,edited
 
                 );}).toList();
     }
@@ -108,8 +106,7 @@ public class PostService {
                             post.getText(),
                             dateFormat.format(post.getPublicationTime()),
                             likesCount,
-                            commentsCount,
-                            post.getReposts(), isLikedIt,edited
+                            commentsCount, isLikedIt,edited
 
                     );}).toList();
     }
@@ -142,8 +139,7 @@ public class PostService {
                             post.getText(),
                             dateFormat.format(post.getPublicationTime()),
                             likesCount,
-                            commentsCount,
-                            post.getReposts(), isLikedIt,edited
+                            commentsCount, isLikedIt,edited
 
                     );}).toList();
     }

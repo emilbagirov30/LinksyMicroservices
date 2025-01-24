@@ -4,6 +4,7 @@ import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.ChatMemberRepository;
 import com.emil.linksy_user.repository.ChatRepository;
+import com.emil.linksy_user.repository.DeletedMessagesRepository;
 import com.emil.linksy_user.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -26,6 +27,7 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final LinksyCacheManager linksyCacheManager;
+    private final DeletedMessagesRepository deletedMessagesRepository;
     public Chat findOrCreatePersonalChat(User user1, User user2) {
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> createNewChat(user1, user2));
@@ -59,6 +61,8 @@ public class ChatService {
                 .map(chat -> {
           var userMessages =  messageRepository.findByChat(chat).stream()
                   .sorted(Comparator.comparing(Message::getDate)).toList();
+          var filterMessages = userMessages.stream().filter(message -> !deletedMessagesRepository.existsByMessage(message)).toList();
+          if (filterMessages.isEmpty()) return null;
           Message lastMessage = null;
           Long senderId = null;
           String lastMessageText="";
@@ -88,13 +92,13 @@ public class ChatService {
               List<User> members = cm.stream()
                       .map(ChatMember::getUser)
                       .toList();
-              User companion = members.get(0).equals(user) ? members.get(1) : members.get(0);
+              User companion = members.get(0).getId().equals(userId) ? members.get(1) : members.get(0);
               avatarUrl = companion.getAvatarUrl();
               displayName = companion.getUsername();
               companionId = companion.getId();
           }
         return new ChatResponse(chat.getId(),companionId,senderId,isGroup,avatarUrl,displayName,lastMessageText,dateLast,unreadMessagesCount);
-        }).collect(Collectors.toList());
+        }).filter(Objects::nonNull).collect(Collectors.toList());
 
     }
 
@@ -229,6 +233,23 @@ public class ChatService {
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
             return new GroupResponse(chat.getName(), chat.getAvatarUrl());
     }
+
+
+
+
+    public void clearMessagesByChat(Long userId,Long chatId){
+        User user = linksyCacheManager.getUserById(userId);
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        var messages = messageRepository.findByChat(chat);
+        for (Message message:messages){
+            DeletedMessage deletedMessage = new DeletedMessage();
+            deletedMessage.setUser(user);
+            deletedMessage.setMessage(message);
+            deletedMessagesRepository.save(deletedMessage);
+        }
+    }
+
 
 
     @KafkaListener(topics = "groupResponse", groupId = "group_id_group", containerFactory = "groupKafkaResponseKafkaListenerContainerFactory")

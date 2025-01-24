@@ -30,6 +30,7 @@ public class MessageService {
     private final ChatMemberRepository chatMemberRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatRepository chatRepository;
+    private final DeletedMessagesRepository deletedMessagesRepository;
     @Autowired
     private EntityManager entityManager;
     private final LinksyCacheManager linksyCacheManager;
@@ -97,10 +98,12 @@ public class MessageService {
         List<Message> messages = chats.stream()
                 .flatMap(chat -> messageRepository.findByChat(chat).stream())
                 .toList();
+        var filterMessages = messages.stream().filter(message ->  !deletedMessagesRepository.existsByMessageAndUser(message,user)).toList();
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-        return messages.stream()
+        return filterMessages.stream()
                 .sorted((message1, message2) -> message2.getDate().compareTo(message1.getDate()))
-                .map(message -> new MessageResponse(
+                .map(message ->
+                        new MessageResponse(
                         message.getId(),
                         message.getSender().getId(),
                         message.getChat().getId(),
@@ -125,8 +128,9 @@ public class MessageService {
          throw new SecurityException("The user is not in the chat");
 
         var messages =  messageRepository.findByChat(chat);
+        var filterMessages = messages.stream().filter(message ->  !deletedMessagesRepository.existsByMessageAndUser(message,user)).toList();
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-        return messages.stream()
+        return filterMessages.stream()
                 .sorted(Comparator.comparing(Message::getDate))
                 .map(message -> new MessageResponse(
                         message.getId(),

@@ -41,6 +41,13 @@ public class ChatController {
         return ResponseEntity.ok(result);
     }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> getUserChats(@RequestParam("id")Long chatId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+     chatService.clearMessagesByChat(userId,chatId);
+        return ResponseEntity.ok().build();
+    }
+
 
     @GetMapping("/group/data/{id}")
     public ResponseEntity<GroupResponse> getGroupData(@PathVariable("id") Long chatId){

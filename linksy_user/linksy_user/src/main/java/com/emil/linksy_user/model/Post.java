@@ -23,7 +23,6 @@ public class Post {
     @JoinColumn(name = "author_id")
     private User user;
     private String text;
-    private Long reposts;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "publication_time",nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")

@@ -224,7 +224,6 @@ public class ChannelService {
             channelPost.setText(response.getText());
             channelPost.setImageUrl(response.getImageUrl());
             channelPost.setVideoUrl(response.getVideoUrl());
-            channelPost.setReposts(0L);
             if (response.getOptions() != null) {
                 if (!response.getOptions().isEmpty()) {
                     Poll poll = new Poll();
@@ -322,7 +321,6 @@ public class ChannelService {
                             isVoted,
                             optionResponseList,
                             Math.round(averageRating * 100.0) / 100.0,
-                            post.getReposts(),
                             post.getEdited(),
                             post.getChannel().getOwner().getId(),
                             commentsCount,
@@ -513,7 +511,6 @@ public class ChannelService {
                 isVoted,
                 optionResponseList,
                 Math.round(averageRating * 100.0) / 100.0,
-                post.getReposts(),
                 post.getEdited(),
                 post.getChannel().getOwner().getId(),
                 commentsCount,

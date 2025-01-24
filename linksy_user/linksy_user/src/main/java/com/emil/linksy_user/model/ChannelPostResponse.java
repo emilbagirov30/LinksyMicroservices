@@ -23,7 +23,6 @@ public class ChannelPostResponse {
     private Boolean isVoted;
     private List<OptionResponse> options;
     private Double averageRating;
-    private Long repostsCount;
     private Boolean edited;
     private Long authorId;
     private Long commentsCount;

@@ -20,7 +20,6 @@ public class PostResponse {
     private String publishDate;
     private Long likesCount;
     private Long commentsCount;
-    private Long repostsCount;
     private Boolean isLikedIt;
     private Boolean edited;
 }
