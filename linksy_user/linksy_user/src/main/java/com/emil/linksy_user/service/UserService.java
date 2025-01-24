@@ -204,6 +204,8 @@ public class UserService {
         boolean correctPassword = validatePassword(changePassword.getOldPassword(), user.getPassword());
         if(correctPassword) {
             user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
+            String newRefreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
+            user.setRefreshToken(newRefreshToken);
             userRepository.save(user);
             linksyCacheManager.cacheUser(user);
         }else throw new NotFoundException("Invalid password");
