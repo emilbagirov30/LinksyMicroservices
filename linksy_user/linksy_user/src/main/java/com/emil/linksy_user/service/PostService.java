@@ -223,4 +223,20 @@ public void deletePost (Long userId,long postId) {
         userPostCommentRepository.delete(comment);
     }
 
+
+    public List<UserResponse> getPostLikes (Long userId,Long postId){
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        User user = linksyCacheManager.getUserById(userId);
+        var likes = userPostLikeRepository.findByPost(post);
+       return likes.stream().map(userPostLike -> {
+           User likeUser = userPostLike.getUser();
+             return new UserResponse(likeUser.getId(), likeUser.getAvatarUrl(), likeUser.getUsername(),
+                             likeUser.getLink(), likeUser.getOnline(),likeUser.getConfirmed());
+       }).toList();
+    }
+
+
+
+
 }

@@ -173,6 +173,19 @@ private final ChannelService channelService;
         channelService.deleteComment(userId,commentId);
         return ResponseEntity.ok().build();
     }
+
+
+
+    @GetMapping("/post/{id}/appreciated")
+    public ResponseEntity<List<PostAppreciatedResponse>> getPostAppreciated(@PathVariable("id") Long postId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var appreciated = channelService.getPostAppreciated(userId,postId);
+        return ResponseEntity.ok(appreciated);
+    }
+
+
+
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404

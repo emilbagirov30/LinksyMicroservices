@@ -5,6 +5,7 @@ import com.emil.linksy_user.model.ChatResponse;
 import com.emil.linksy_user.model.GroupResponse;
 import com.emil.linksy_user.model.UserResponse;
 import com.emil.linksy_user.service.ChatService;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,6 +56,24 @@ public class ChatController {
         var result = chatService.getGroupData(userId,chatId);
         return ResponseEntity.ok(result);
     }
+
+    @PutMapping("/group/add/members")
+    public ResponseEntity<Void> addMembers(@RequestParam("id")Long groupId, @RequestParam("newMembers") List<Long> membersId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        chatService.addMembersToGroup(userId,groupId,membersId);
+        return ResponseEntity.ok().build();
+    }
+
+
+    @DeleteMapping("/group/leave")
+    public ResponseEntity<Void> leaveTheGroup(@RequestParam("id")Long groupId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        chatService.leaveTheGroup(userId,groupId);
+        return ResponseEntity.ok().build();
+    }
+
+
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404

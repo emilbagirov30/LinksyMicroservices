@@ -279,9 +279,27 @@ public class ChatService {
 
     }
 
+    public void addMembersToGroup(Long userId,Long groupId,List<Long> newMembersList){
+        User user = linksyCacheManager.getUserById(userId);
+        Chat chat = chatRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
 
+        for (Long newMemberId:newMembersList){
+            ChatMember chatMember = new ChatMember();
+           User newMember = linksyCacheManager.getUserById(newMemberId);
+           chatMember.setUser(newMember);
+           chatMember.setChat(chat);
+           chatMemberRepository.save(chatMember);
+        }
+    }
 
-
+    public void leaveTheGroup (Long userId,Long groupId){
+        User user = linksyCacheManager.getUserById(userId);
+        Chat chat = chatRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        ChatMember chatMember = chatMemberRepository.findByChatAndUser(chat,user);
+        chatMemberRepository.delete(chatMember);
+    }
 
 
 

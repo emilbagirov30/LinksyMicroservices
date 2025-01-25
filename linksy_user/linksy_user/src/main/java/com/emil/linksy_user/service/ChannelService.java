@@ -520,6 +520,28 @@ public class ChannelService {
         );
     }
 
+
+
+    public List<PostAppreciatedResponse> getPostAppreciated (Long userId,Long postId){
+        ChannelPost post = channelPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+        User user = linksyCacheManager.getUserById(userId);
+        var evaluations = channelPostEvaluationsRepository.findByChannelPost(post);
+       return evaluations.stream().map(evaluation ->{
+           User appreciate = linksyCacheManager.getUserById(evaluation.getUser().getId());
+           return new PostAppreciatedResponse(appreciate.getId(),appreciate.getAvatarUrl(),
+                   appreciate.getUsername(), appreciate.getLink(), appreciate.getOnline(),appreciate.getOnline(),evaluation.getScore());
+               }
+       ).toList();
+    }
+
+
+
+
+
+
+
+
     @Transactional
     public void deleteComment (Long userId,Long commentId){
         ChannelPostComment comment = channelPostCommentsRepository.findById(commentId)

@@ -1,9 +1,7 @@
 package com.emil.linksy_user.controller;
 
 
-import com.emil.linksy_user.model.CommentRequest;
-import com.emil.linksy_user.model.CommentResponse;
-import com.emil.linksy_user.model.PostResponse;
+import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -64,5 +62,13 @@ public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         postService.deleteComment(userId,commentId);
         return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("/{id}/likes")
+    public ResponseEntity<List<UserResponse>> getPostLikes(@PathVariable("id") Long postId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var users = postService.getPostLikes(userId,postId);
+        return ResponseEntity.ok(users);
     }
 }
