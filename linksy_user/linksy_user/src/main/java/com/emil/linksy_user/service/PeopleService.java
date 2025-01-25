@@ -10,6 +10,7 @@ import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -103,11 +104,13 @@ public class PeopleService {
         if (userBirthday!=null){
             birthday = formatBirthday(userBirthday);
         }
-
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM HH:mm");
         Long subscriptionsCount = subscriptionsRepository.countBySubscriber(user);
         Long subscribersCount = subscriptionsRepository.countByUser(user);
         Boolean isPageOwnerBlockedByViewer = isBlocked(user,finder);
-        return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,subscriptionsCount,subscribersCount, isPageOwnerBlockedByViewer,user.getMessageMode(),isSubscription);
+        return new UserPageData(username,link,avatarUrl,birthday,isSubscriber,
+                subscriptionsCount,subscribersCount, isPageOwnerBlockedByViewer,
+                user.getMessageMode(),isSubscription,user.getConfirmed(),user.getOnline(),user.getLastActive().format(dateFormatter));
     }
 
     private String formatBirthday(Date birthday) {

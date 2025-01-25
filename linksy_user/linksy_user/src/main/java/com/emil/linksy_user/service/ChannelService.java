@@ -133,7 +133,7 @@ public class ChannelService {
         var requests = channelSubscriptionsRequestRepository.findByChannel(channel);
         Boolean isSubmitted = channelSubscriptionsRequestRepository.findByUserAndChannel(finder, channel)!=null;
         var posts = channelPostRepository.findByChannel(channel);
-
+        Boolean confirmed =  channel.getConfirmed();
         Double averageRating = posts.stream()
                 .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
                 .filter(Objects::nonNull)
@@ -155,7 +155,9 @@ public class ChannelService {
                 Math.round(averageRating * 100.0) / 100.0,
                 type,
                 memberCount,
-                (long) requests.size()
+                (long) requests.size(),
+                channel.getConfirmed()
+
         );
     }
 
@@ -204,7 +206,7 @@ public class ChannelService {
     public void rejectSubscriptionRequest(Long ownerId, Long channelId, Long candidateId) {
         User owner = linksyCacheManager.getUserById(ownerId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
-        if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
+        if (!channel.getOwner().getId().equals(ownerId)) throw new SecurityException("User is not the owner channel");
         User candidate =  linksyCacheManager.getUserById(candidateId);
         var request = channelSubscriptionsRequestRepository.findByUserAndChannel(candidate, channel);
         channelSubscriptionsRequestRepository.delete(request);

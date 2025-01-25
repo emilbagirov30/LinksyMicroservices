@@ -54,6 +54,7 @@ public class User implements Serializable {
     private String RefreshToken;
     @Column(name = "ws_token")
     private String wsToken;
+
     @Temporal(TemporalType.DATE)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
     private Date birthday;
@@ -68,5 +69,6 @@ public class User implements Serializable {
     private Boolean deleted;
 
     @Column(name = "last_active")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
     private LocalDateTime lastActive;
 }

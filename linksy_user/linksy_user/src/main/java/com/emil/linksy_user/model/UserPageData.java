@@ -21,4 +21,7 @@ public class UserPageData {
     private Boolean isPageOwnerBlockedByViewer;
     private MessageMode messageMode;
     private Boolean isSubscription;
+    private Boolean confirmed;
+    private Boolean online;
+    private String lastActive;
 }

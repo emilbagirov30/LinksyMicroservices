@@ -2,7 +2,7 @@ package com.emil.linksy_user.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
+
 
 @Data
 @AllArgsConstructor

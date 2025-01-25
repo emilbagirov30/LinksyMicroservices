@@ -21,4 +21,5 @@ public class ChannelPageData {
     private ChannelType type;
     private Long subscribersCount;
     private Long requestsCount;
+    private Boolean confirmed;
 }
