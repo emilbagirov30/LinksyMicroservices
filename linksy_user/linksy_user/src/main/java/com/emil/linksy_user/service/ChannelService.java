@@ -44,6 +44,8 @@ public class ChannelService {
             channel.setAvatarUrl(response.getAvatarUrl());
             channel.setDescription(response.getDescription());
             channel.setType(response.getType());
+            channel.setBlocked(false);
+            channel.setConfirmed(false);
             channelRepository.save(channel);
             linksyCacheManager.cacheChannel(channel);
             ChannelMember channelMember = new ChannelMember();

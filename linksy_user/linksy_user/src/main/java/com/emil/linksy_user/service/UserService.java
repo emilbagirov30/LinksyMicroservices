@@ -6,6 +6,7 @@ import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
 import com.emil.linksy_user.util.CodeGenerator;
+import com.emil.linksy_user.util.LinksyEncryptor;
 import com.emil.linksy_user.util.MessageMode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -31,7 +32,6 @@ public class UserService {
     private final JwtToken jwtToken;
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
     private final LinksyCacheManager linksyCacheManager;
- private final UserStatusUpdater userStatusUpdater;
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
@@ -41,6 +41,10 @@ public class UserService {
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setAvatarUrl("null");
+        user.setOnline(false);
+        user.setBlocked(false);
+        user.setDeleted(false);
+        user.setConfirmed(false);
         user.setMessageMode(MessageMode.ALL);
         pendingUsers.put(email, user);
         sendCodeToConfirmTheMail(email);
@@ -64,6 +68,7 @@ public class UserService {
         if (user == null || !CodeGenerator.isValidCode(email, code)) {
             throw new InvalidVerificationCodeException("Неверный код подтверждения");
         }
+        user.setEmail(email);
         userRepository.save(user);
         pendingUsers.remove(email);
         CodeGenerator.removeCode(email);

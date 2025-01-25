@@ -6,6 +6,7 @@ import com.emil.linksy_user.repository.ChatMemberRepository;
 import com.emil.linksy_user.repository.ChatRepository;
 import com.emil.linksy_user.repository.DeletedMessagesRepository;
 import com.emil.linksy_user.repository.MessageRepository;
+import com.emil.linksy_user.util.LinksyEncryptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -28,6 +29,7 @@ public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final LinksyCacheManager linksyCacheManager;
     private final DeletedMessagesRepository deletedMessagesRepository;
+    private final LinksyEncryptor encryptor;
     public Chat findOrCreatePersonalChat(User user1, User user2) {
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> createNewChat(user1, user2));
@@ -62,41 +64,40 @@ public class ChatService {
           var userMessages =  messageRepository.findByChat(chat).stream()
                   .sorted(Comparator.comparing(Message::getDate)).toList();
           var filterMessages = userMessages.stream().filter(message -> !deletedMessagesRepository.existsByMessage(message)).toList();
-          if (filterMessages.isEmpty()) return null;
+          if (filterMessages.isEmpty() && !chat.getIsGroup()) return null;
           Message lastMessage = null;
           Long senderId = null;
           String lastMessageText="";
           String dateLast="";
           Long unreadMessagesCount = null;
           SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
-          if (!userMessages.isEmpty()) {
-             unreadMessagesCount = userMessages.stream()
-                      .filter(message -> !message.getViewed() && !message.getSender().getId().equals(userId))
-                      .count();
-              lastMessage = userMessages.get(userMessages.size()-1);
-              if(lastMessage.getText()!=null) lastMessageText = lastMessage.getText();
-              senderId = lastMessage.getSender().getId();
-              dateLast = dateFormat.format (lastMessage.getDate());
+           if(!filterMessages.isEmpty()) {
+               unreadMessagesCount = filterMessages.stream()
+                       .filter(message -> !message.getViewed() && !message.getSender().getId().equals(userId))
+                       .count();
+               lastMessage = filterMessages.get(filterMessages.size() - 1);
+               if (lastMessage.getText() != null) lastMessageText = encryptor.decrypt(lastMessage.getText());
+               senderId = lastMessage.getSender().getId();
+               dateLast = dateFormat.format(lastMessage.getDate());
+           }
+               String avatarUrl;
+               String displayName;
+               Long companionId = null;
+               Boolean isGroup = chat.getIsGroup();
+               if (isGroup) {
+                   avatarUrl = chat.getAvatarUrl();
+                   displayName = chat.getName();
+               } else {
+                   List<ChatMember> cm = chatMemberRepository.findByChat(chat);
+                   List<User> members = cm.stream()
+                           .map(ChatMember::getUser)
+                           .toList();
+                   User companion = members.get(0).getId().equals(userId) ? members.get(1) : members.get(0);
+                   avatarUrl = companion.getAvatarUrl();
+                   displayName = companion.getUsername();
+                   companionId = companion.getId();
+               }
 
-          }
-
-          String avatarUrl;
-          String displayName;
-          Long companionId=null;
-          Boolean isGroup = chat.getIsGroup();
-          if (isGroup){
-              avatarUrl = chat.getAvatarUrl();
-              displayName = chat.getName();
-          }else {
-              List<ChatMember> cm = chatMemberRepository.findByChat(chat);
-              List<User> members = cm.stream()
-                      .map(ChatMember::getUser)
-                      .toList();
-              User companion = members.get(0).getId().equals(userId) ? members.get(1) : members.get(0);
-              avatarUrl = companion.getAvatarUrl();
-              displayName = companion.getUsername();
-              companionId = companion.getId();
-          }
         return new ChatResponse(chat.getId(),companionId,senderId,isGroup,avatarUrl,displayName,lastMessageText,dateLast,unreadMessagesCount);
         }).filter(Objects::nonNull).collect(Collectors.toList());
 

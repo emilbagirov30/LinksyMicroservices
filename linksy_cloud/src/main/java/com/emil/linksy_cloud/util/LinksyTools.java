@@ -6,3 +6,4 @@ public class LinksyTools {
         return source.substring(1,source.length()-1).replace("\\n", "\n");
     }
 }
+       

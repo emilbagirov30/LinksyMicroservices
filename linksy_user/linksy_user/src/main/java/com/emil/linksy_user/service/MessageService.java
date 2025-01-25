@@ -4,6 +4,7 @@ import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.exception.BlacklistException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.*;
+import com.emil.linksy_user.util.LinksyEncryptor;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,7 @@ public class MessageService {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatRepository chatRepository;
     private final DeletedMessagesRepository deletedMessagesRepository;
-    @Autowired
-    private EntityManager entityManager;
+    private final LinksyEncryptor encryptor;
     private final LinksyCacheManager linksyCacheManager;
     @KafkaListener(topics = "messageResponse", groupId = "group_id_message", containerFactory = "messageKafkaResponseKafkaListenerContainerFactory")
     @Transactional
@@ -42,7 +42,7 @@ public class MessageService {
         User sender = linksyCacheManager.getUserById(senderId);
         Message message = new Message();
         message.setSender(sender);
-        message.setText(response.getText());
+        message.setText(encryptor.encrypt(response.getText()));
         message.setImageUrl(response.getImageUrl());
         message.setVideoUrl(response.getVideoUrl());
         message.setAudioUrl(response.getAudioUrl());
@@ -107,7 +107,7 @@ public class MessageService {
                         message.getId(),
                         message.getSender().getId(),
                         message.getChat().getId(),
-                        message.getText(),
+                        encryptor.decrypt(message.getText()),
                         message.getImageUrl(),
                         message.getVideoUrl(),
                         message.getAudioUrl(),
@@ -136,7 +136,7 @@ public class MessageService {
                         message.getId(),
                         message.getSender().getId(),
                         message.getChat().getId(),
-                        message.getText(),
+                        encryptor.decrypt(message.getText()),
                         message.getImageUrl(),
                         message.getVideoUrl(),
                         message.getAudioUrl(),
