@@ -101,15 +101,9 @@ public class ChannelService {
         List<ChannelMember> channelMembers = channelMemberRepository.findByUser(user);
         var channels = channelMembers.stream().map(ChannelMember::getChannel);
         return channels.map(channel -> {
-            var posts = channelPostRepository.findByChannel(channel);
-            Double averageRating = posts.stream()
-                    .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
-                    .filter(Objects::nonNull)
-                    .mapToDouble(Double::doubleValue)
-                    .average()
-                    .orElse(0.0);
+            Double averageRating = getAverageRating(channel);
             return new ChannelResponse(channel.getId(), channel.getOwner().getId(), channel.getName(),
-                    channel.getLink(), channel.getAvatarUrl(), Math.round(averageRating * 100.0) / 100.0, channel.getType(),channel.getConfirmed());
+                    channel.getLink(), channel.getAvatarUrl(), averageRating, channel.getType(),channel.getConfirmed());
 
         }).toList();
     }
@@ -119,10 +113,8 @@ public class ChannelService {
         User finder = linksyCacheManager.getUserById(finderId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
         if(channel.getBlocked()) throw new BlockedException("Channel is blocked");
-        List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
-        Long memberCount = (long) channelMembers.size();
-        boolean isMember = channelMembers.stream()
-                .anyMatch(channelMember -> channelMember.getUser().getId().equals(finderId));
+        Long memberCount = getMemberCount(channel);
+        Boolean isMember = isMember(channel,finderId);
 
         var type = channel.getType();
         String avatarUrl = channel.getAvatarUrl();
@@ -132,14 +124,8 @@ public class ChannelService {
 
         var requests = channelSubscriptionsRequestRepository.findByChannel(channel);
         Boolean isSubmitted = channelSubscriptionsRequestRepository.findByUserAndChannel(finder, channel)!=null;
-        var posts = channelPostRepository.findByChannel(channel);
         Boolean confirmed =  channel.getConfirmed();
-        Double averageRating = posts.stream()
-                .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .average()
-                .orElse(0.0);
+        Double averageRating = getAverageRating(channel);
 
         Long ownerId = channel.getOwner().getId();
 
@@ -152,13 +138,37 @@ public class ChannelService {
                 description,
                 isMember,
                 isSubmitted,
-                Math.round(averageRating * 100.0) / 100.0,
+                averageRating,
                 type,
                 memberCount,
                 (long) requests.size(),
-                channel.getConfirmed()
+                confirmed
 
         );
+    }
+
+
+    public Long getMemberCount (Channel channel){
+        List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
+        return (long) channelMembers.size();
+    }
+
+    public Boolean isMember(Channel channel,Long finderId){
+        List<ChannelMember> channelMembers = channelMemberRepository.findByChannel(channel);
+        return  channelMembers.stream()
+                .anyMatch(channelMember -> channelMember.getUser().getId().equals(finderId));
+    }
+
+
+    public Double getAverageRating (Channel channel){
+        var posts = channelPostRepository.findByChannel(channel);
+        double averageRating = posts.stream()
+                .map(post -> channelPostEvaluationsRepository.findAverageScoreByChannelPostId(post.getId()))
+                .filter(Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+        return Math.round(averageRating * 100.0) / 100.0;
     }
 
 

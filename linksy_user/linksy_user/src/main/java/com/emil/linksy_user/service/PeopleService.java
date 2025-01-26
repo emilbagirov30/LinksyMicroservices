@@ -113,6 +113,17 @@ public class PeopleService {
                 user.getMessageMode(),isSubscription,user.getConfirmed(),user.getOnline(),user.getLastActive().format(dateFormatter));
     }
 
+
+
+
+    public boolean isSubscriber(User user,User finder){
+       return subscriptionsRepository.existsByUserAndSubscriber(user,finder);
+    }
+    public boolean isSubscription(User user,User finder){
+        return  subscriptionsRepository.existsByUserAndSubscriber(finder,user);
+    }
+
+
     private String formatBirthday(Date birthday) {
         if (birthday == null) {
             return null;

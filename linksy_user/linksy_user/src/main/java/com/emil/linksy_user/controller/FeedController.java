@@ -4,6 +4,7 @@ package com.emil.linksy_user.controller;
 import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.ChannelPostResponse;
 import com.emil.linksy_user.model.PostResponse;
+import com.emil.linksy_user.model.RecommendationResponse;
 import com.emil.linksy_user.service.FeedService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,16 @@ private final FeedService feedService;
         var posts = feedService.getAllSubscriptionsPosts(useId);
         return ResponseEntity.ok(posts);
     }
+
+
+    @GetMapping("/recommendation")
+    public ResponseEntity<List<RecommendationResponse>> getRecommendation() {
+        Long useId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var recommendations = feedService.getRecommendation(useId);
+        return ResponseEntity.ok(recommendations);
+    }
+
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404

@@ -12,4 +12,5 @@ public interface ChannelMemberRepository  extends JpaRepository<ChannelMember, L
     List<ChannelMember> findByUser(User user);
     List<ChannelMember> findByChannel(Channel channel);
     Optional<ChannelMember> findByUserAndChannel(User user, Channel channel);
+    boolean existsByChannelAndUser (Channel channel,User user);
 }

@@ -1,17 +1,16 @@
 package com.emil.linksy_user.model;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class UserResponse {
-    private Long id;
+public class RecommendationResponse {
+    private Long channelId;
+    private Long userId;
     private String avatarUrl;
-    private String username;
+    private String name;
     private String link;
-    private Boolean online;
     private Boolean confirmed;
 }

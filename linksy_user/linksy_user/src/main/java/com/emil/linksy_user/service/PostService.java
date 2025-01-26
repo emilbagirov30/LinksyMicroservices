@@ -84,6 +84,22 @@ public class PostService {
                 );}).toList();
     }
 
+    public Long likesCount(User user){
+        List<Post> posts = postRepository.findByUser(user);
+        Long totalLikesCount = 0L;
+        for (Post post : posts) {
+            Long likesCount = userPostLikeRepository.countByPost(post);
+            totalLikesCount += likesCount;
+        }
+        return totalLikesCount;
+    }
+
+
+
+
+
+
+
 
     public List<PostResponse> toPostResponse (User finder,List<Post> posts){
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
