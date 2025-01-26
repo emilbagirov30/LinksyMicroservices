@@ -43,10 +43,10 @@ public class MessageService {
         Message message = new Message();
         message.setSender(sender);
         message.setText(encryptor.encrypt(response.getText()));
-        message.setImageUrl(response.getImageUrl());
-        message.setVideoUrl(response.getVideoUrl());
-        message.setAudioUrl(response.getAudioUrl());
-        message.setVoiceUrl(response.getVoiceUrl());
+        message.setImageUrl(encryptor.encrypt(response.getImageUrl()));
+        message.setVideoUrl(encryptor.encrypt(response.getVideoUrl()));
+        message.setAudioUrl(encryptor.encrypt(response.getAudioUrl()));
+        message.setVoiceUrl(encryptor.encrypt(response.getVoiceUrl()));
         message.setViewed(false);
         message.setEdited(false);
         Chat chat;
@@ -85,13 +85,14 @@ public class MessageService {
         var members =  chatMemberRepository.findByChat(chat);
         var users =members.stream().map(ChatMember::getUser).distinct().toList();
         users.forEach( user -> {
-            messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/" +  chat.getId() + "/", response);
+            messagingTemplate.convertAndSendToUser(encryptor.decrypt(user.getWsToken()), "/queue/messages/" +  chat.getId() + "/", response);
                 }
         );
         chatService.sendNewChat(chat.getId());
     }
 
     public List<MessageResponse> getUserMessages(Long userId){
+
         User user = linksyCacheManager.getUserById(userId);
         List<ChatMember> chatMembers= chatMemberRepository.findByUser(user);
         List<Chat> chats = chatMembers.stream().map(ChatMember::getChat).toList();
@@ -100,6 +101,7 @@ public class MessageService {
                 .toList();
         var filterMessages = messages.stream().filter(message ->  !deletedMessagesRepository.existsByMessageAndUser(message,user)).toList();
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        System.out.println(filterMessages.stream().map(Message::getText));
         return filterMessages.stream()
                 .sorted((message1, message2) -> message2.getDate().compareTo(message1.getDate()))
                 .map(message ->
@@ -108,10 +110,10 @@ public class MessageService {
                         message.getSender().getId(),
                         message.getChat().getId(),
                         encryptor.decrypt(message.getText()),
-                        message.getImageUrl(),
-                        message.getVideoUrl(),
-                        message.getAudioUrl(),
-                        message.getVoiceUrl(),
+                        encryptor.decrypt(message.getImageUrl()),
+                        encryptor.decrypt(message.getVideoUrl()),
+                        encryptor.decrypt(message.getAudioUrl()),
+                        encryptor.decrypt(message.getVoiceUrl()),
                         dateFormat.format(message.getDate()),
                         message.getViewed(),message.getEdited()
 
@@ -137,10 +139,10 @@ public class MessageService {
                         message.getSender().getId(),
                         message.getChat().getId(),
                         encryptor.decrypt(message.getText()),
-                        message.getImageUrl(),
-                        message.getVideoUrl(),
-                        message.getAudioUrl(),
-                        message.getVoiceUrl(),
+                        encryptor.decrypt(message.getImageUrl()),
+                        encryptor.decrypt(message.getVideoUrl()),
+                        encryptor.decrypt( message.getAudioUrl()),
+                        encryptor.decrypt(message.getVoiceUrl()),
                         dateFormat.format(message.getDate()),
                         message.getViewed(),message.getEdited()
                 ))
@@ -156,7 +158,7 @@ public class MessageService {
         messageRepository.saveAll(filterMessages);
 
         for (Message m : filterMessages) {
-          messagingTemplate.convertAndSendToUser(m.getSender().getWsToken(), "/queue/messages/viewed/" + chatId + "/", m.getId());
+          messagingTemplate.convertAndSendToUser(encryptor.decrypt(m.getSender().getWsToken()), "/queue/messages/viewed/" + chatId + "/", m.getId());
    }
     }
 
@@ -168,10 +170,12 @@ public class MessageService {
         var members = chatMemberRepository.findByChat(chat);
         var users = members.stream().map(ChatMember::getUser).toList();
         if (!message.getSender().getId().equals(userId)) throw new AccessDeniedException("The user is not the sender");
-        messageRepository.delete(message);
-
         for (User user: users){
-            messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/deleted/" + chat.getId() + "/", messageId);
+                DeletedMessage deletedMessage = new DeletedMessage();
+                deletedMessage.setUser(user);
+                deletedMessage.setMessage(message);
+                deletedMessagesRepository.save(deletedMessage);
+            messagingTemplate.convertAndSendToUser(encryptor.decrypt(user.getWsToken()), "/queue/messages/deleted/" + chat.getId() + "/", messageId);
         }
 
     }
@@ -189,7 +193,7 @@ public class MessageService {
         messageRepository.save(message);
             var response = new EditMessageResponse(messageId,text);
         for (User user: users){
-            messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/edited/" + chat.getId() + "/", response);
+            messagingTemplate.convertAndSendToUser(encryptor.decrypt(user.getWsToken()), "/queue/messages/edited/" + chat.getId() + "/", response);
         }
 
     }
@@ -204,7 +208,7 @@ public class MessageService {
         var response = new StatusResponse(sender.getUsername(),status.getStatus());
         for (User user: users){
             if (!Objects.equals(user.getId(),status.getUserId())) {
-                messagingTemplate.convertAndSendToUser(user.getWsToken(), "/queue/messages/status/" + chat.getId() + "/", response);
+                messagingTemplate.convertAndSendToUser(encryptor.decrypt(user.getWsToken()), "/queue/messages/status/" + chat.getId() + "/", response);
             }
         }
     }

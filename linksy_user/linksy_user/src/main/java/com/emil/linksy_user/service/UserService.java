@@ -32,6 +32,7 @@ public class UserService {
     private final JwtToken jwtToken;
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
     private final LinksyCacheManager linksyCacheManager;
+    private final LinksyEncryptor encryptor;
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
@@ -68,7 +69,7 @@ public class UserService {
         if (user == null || !CodeGenerator.isValidCode(email, code)) {
             throw new InvalidVerificationCodeException("Неверный код подтверждения");
         }
-        user.setEmail(email);
+        user.setEmail(encryptor.encrypt(email));
         userRepository.save(user);
         pendingUsers.remove(email);
         CodeGenerator.removeCode(email);
@@ -76,14 +77,18 @@ public class UserService {
     }
 
     public void requestPasswordChange(String email) {
-        if (userRepository.findByEmail(email).isEmpty()) {
-            throw new NotFoundException("Пользователь с таким email не зарегистрирован");
-        }
+        userRepository.findAll().stream()
+                .filter(u -> encryptor.decrypt(u.getEmail()).equals(email))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Пользователь с таким email не найден"));
+
         sendCodeToConfirmThePasswordChange(email);
     }
 
     public void confirmPasswordChange(String email, String code, String newPassword) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findAll().stream()
+                .filter(u -> encryptor.decrypt(u.getEmail()).equals(email))
+                .findFirst()
                 .orElseThrow(() -> new NotFoundException("Пользователь с таким email не найден"));
         if (!CodeGenerator.isValidCode(email, code)) {
             throw new InvalidVerificationCodeException("Неверный код подтверждения");
@@ -99,7 +104,9 @@ public class UserService {
     }
 
     public Token logIn(String email, String password) {
-        return userRepository.findByEmail(email)
+        return userRepository.findAll().stream()
+                .filter(u -> encryptor.decrypt(u.getEmail()).equals(email))
+                .findFirst()
                 .filter(user -> validatePassword(password, user.getPassword()))
                 .map(user -> {
                     if (user.getBlocked()) {
@@ -111,8 +118,8 @@ public class UserService {
                     String accessToken = jwtToken.generateAccessToken(user.getId().toString());
                     String refreshToken = jwtToken.generateRefreshToken(user.getId().toString());
                     String wsToken = UUID.randomUUID().toString() + UUID.randomUUID();
-                    user.setWsToken(wsToken);
-                    user.setRefreshToken(refreshToken);
+                    user.setWsToken(encryptor.encrypt(wsToken));
+                    user.setRefreshToken(encryptor.encrypt(refreshToken));
                     user.setOnline(true);
                     userRepository.save(user);
                     linksyCacheManager.cacheUser(user);
@@ -130,17 +137,16 @@ public class UserService {
 
         user.setOnline(true);
         user.setLastActive(LocalDateTime.now());
-         if (!user.getRefreshToken().equals(refreshToken)) {throw new InvalidTokenException("Invalid refresh token");}
+         if (!encryptor.decrypt(user.getRefreshToken()).equals(refreshToken)) {throw new InvalidTokenException("Invalid refresh token");}
         String newAccessToken = jwtToken.generateAccessToken(String.valueOf(userId));
         String newRefreshToken = refreshToken;
-        String newWsToken = user.getWsToken();
+        String newWsToken = encryptor.decrypt(user.getWsToken());
         if (jwtToken.needsRefreshRenewal(refreshToken)) {
             newRefreshToken = jwtToken.generateRefreshToken(String.valueOf(userId));
             newWsToken = UUID.randomUUID().toString() + UUID.randomUUID();
-            user.setRefreshToken(newRefreshToken);
-            user.setWsToken(newWsToken);
+            user.setRefreshToken(encryptor.encrypt(newRefreshToken));
+            user.setWsToken(encryptor.encrypt(newWsToken));
         }
-
         userRepository.save(user);
         linksyCacheManager.cacheUser(user);
         return new Token(newAccessToken, newRefreshToken,newWsToken);
@@ -157,7 +163,7 @@ public class UserService {
         String birthday = null;
         if (user.getBirthday()!=null)
           birthday = dateFormat.format(user.getBirthday());
-        return new AllUserData(user.getUsername(), user.getAvatarUrl(),user.getEmail(),user.getLink(),birthday);
+        return new AllUserData(user.getUsername(), user.getAvatarUrl(), encryptor.decrypt(user.getEmail()),user.getLink(),birthday);
     }
 
 

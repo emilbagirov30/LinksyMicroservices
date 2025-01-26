@@ -16,6 +16,7 @@ public class LinksyEncryptor {
     }
 
     public String encrypt(String value) {
+        if (value==null) return null;
         try {
             return encryptor.encrypt(value);
         } catch (Exception e) {
@@ -23,10 +24,12 @@ public class LinksyEncryptor {
         }
     }
 
-    public  String decrypt(String value) {
+    public String decrypt(String value) {
+        if (value==null) return null;
         try {
             return encryptor.decrypt(value);
         } catch (Exception e) {
+
             throw new RuntimeException("Error in decoding the text", e);
         }
     }

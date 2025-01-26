@@ -25,7 +25,6 @@ public class User implements Serializable {
     private Long id;
 
     @NotBlank
-    @Email
     @Column(unique = true)
     private String email;
 
