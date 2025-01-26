@@ -1,0 +1,23 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: cloud-service
+          uri: https://linksy-mes.ru:9616/
+          predicates:
+            - Path=/cloud/**
+          filters:
+            - RewritePath=/cloud/(?<segment>.*), /${segment}
+
+
+        - id: user-service
+          uri: https://linksy-mes.ru:9614/
+          predicates:
+            - Path=/user/**
+          filters:
+            - RewritePath=/user/(?<segment>.*), /${segment}
+
+
+
+server:
+  port: 443

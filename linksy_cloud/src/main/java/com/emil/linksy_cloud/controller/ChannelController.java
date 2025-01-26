@@ -5,10 +5,7 @@ import com.emil.linksy_cloud.util.ChannelType;
 import com.emil.linksy_cloud.util.LinksyTools;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -56,6 +53,15 @@ public class ChannelController {
         Long ownerId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         mediaService.produceChannelPost(ownerId,channelId,text,image,video,audio,pollTitle,options,postId,imageUrl,videoUrl,audioUrl);
         return ResponseEntity.ok().build();
+    }
+
+
+
+
+    @GetMapping("/22")
+    public ResponseEntity<String> dfdft() {
+
+        return ResponseEntity.ok("аааа");
     }
 
 }
