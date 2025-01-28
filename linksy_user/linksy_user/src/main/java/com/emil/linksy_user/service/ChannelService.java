@@ -544,7 +544,7 @@ public class ChannelService {
        return evaluations.stream().map(evaluation ->{
            User appreciate = linksyCacheManager.getUserById(evaluation.getUser().getId());
            return new PostAppreciatedResponse(appreciate.getId(),appreciate.getAvatarUrl(),
-                   appreciate.getUsername(), appreciate.getLink(), appreciate.getOnline(),appreciate.getOnline(),evaluation.getScore());
+                   appreciate.getUsername(), appreciate.getLink(), appreciate.getOnline(),appreciate.getConfirmed(),evaluation.getScore());
                }
        ).toList();
     }
