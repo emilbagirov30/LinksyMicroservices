@@ -79,7 +79,6 @@ public class ChatService {
                lastMessage = filterMessages.get(filterMessages.size() - 1);
                if (lastMessage.getText() != null) lastMessageText = encryptor.decrypt(lastMessage.getText());
                senderId = lastMessage.getSender().getId();
-               confirmed = lastMessage.getSender().getConfirmed();
                dateLast = dateFormat.format(lastMessage.getDate());
            }
                String avatarUrl;

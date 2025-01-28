@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "linksy_viewed_moments")
+@Table(name = "linksy_viewed_moments",  uniqueConstraints = @UniqueConstraint(columnNames = {"moment_id", "user_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
