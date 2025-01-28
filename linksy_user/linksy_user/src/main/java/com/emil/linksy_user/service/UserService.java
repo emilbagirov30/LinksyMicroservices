@@ -154,7 +154,7 @@ public class UserService {
 
     public UserProfileData getUserProfileData(Long userId) {
         User user = linksyCacheManager.getUserById(userId);
-        return new UserProfileData(userId,user.getUsername(),user.getLink(), user.getAvatarUrl());
+        return new UserProfileData(userId,user.getUsername(),user.getLink(), user.getAvatarUrl(),user.getConfirmed());
     }
 
     public AllUserData getAllUserData(Long userId) {
@@ -193,7 +193,8 @@ public class UserService {
             if (userRepository.existsByLinkAndIdNot(link, userId)) {
                 throw new LinkAlreadyExistsException("Link is already in use by another user");
             }
-            user.setLink(link);
+            if(link.isEmpty()) user.setLink(null);
+            else user.setLink(link);
             userRepository.save(user);
             linksyCacheManager.cacheUser(user);
         }

@@ -29,7 +29,7 @@ public class LinksyEncryptor {
         try {
             return encryptor.decrypt(value);
         } catch (Exception e) {
-
+            System.out.println("исключение:" + value);
             throw new RuntimeException("Error in decoding the text", e);
         }
     }

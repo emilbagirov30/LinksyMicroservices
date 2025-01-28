@@ -11,6 +11,7 @@ public class PostResponse {
     private Long postId;
     private Long authorId;
     private String authorUsername;
+    private Boolean confirmed;
     private String authorAvatarUrl;
     private String imageUrl;
     private String videoUrl;

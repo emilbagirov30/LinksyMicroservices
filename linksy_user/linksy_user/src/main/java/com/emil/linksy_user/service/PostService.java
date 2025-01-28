@@ -71,6 +71,7 @@ public class PostService {
                         post.getId(),
                         post.getUser().getId(),
                         user.getUsername(),
+                        user.getConfirmed(),
                         user.getAvatarUrl(),
                         post.getImageUrl(),
                         post.getVideoUrl(),
@@ -114,6 +115,7 @@ public class PostService {
                             post.getId(),
                             post.getUser().getId(),
                             post.getUser().getUsername(),
+                            post.getUser().getConfirmed(),
                             post.getUser().getAvatarUrl(),
                             post.getImageUrl(),
                             post.getVideoUrl(),
@@ -147,6 +149,7 @@ public class PostService {
                             post.getId(),
                             post.getUser().getId(),
                             user.getUsername(),
+                            post.getUser().getConfirmed(),
                             user.getAvatarUrl(),
                             post.getImageUrl(),
                             post.getVideoUrl(),
@@ -221,7 +224,7 @@ public void deletePost (Long userId,long postId) {
                  .map(comment -> {
                      User author = comment.getUser();
                      Long parentId = comment.getParent() == null ? null : comment.getParent().getId();
-                     return new CommentResponse(comment.getId(), author.getId(), author.getAvatarUrl(), author.getUsername(), parentId,comment.getText(),
+                     return new CommentResponse(comment.getId(), author.getId(), author.getAvatarUrl(), author.getUsername(),author.getConfirmed(), parentId,comment.getText(),
                      dateFormat.format(comment.getDate()));
                  }).toList();
     }

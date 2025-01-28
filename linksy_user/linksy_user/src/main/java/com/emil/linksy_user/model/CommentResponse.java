@@ -9,11 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CommentResponse {
-    Long commentId;
-    Long authorId;
-    String authorAvatarUrl;
-    String authorName;
-    Long parentCommentId;
-    String commentText;
-    String date;
+   private Long commentId;
+    private Long authorId;
+    private String authorAvatarUrl;
+    private String authorName;
+    private Boolean confirmed;
+    private  Long parentCommentId;
+    private  String commentText;
+    private String date;
 }

@@ -295,7 +295,7 @@ public class ChannelService {
         }
 
         var posts = channelPostRepository.findByChannel(channel);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
 
         return posts.stream()
                 .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
@@ -325,6 +325,7 @@ public class ChannelService {
                             post.getId(),
                             channelId,
                             channel.getName(),
+                            channel.getConfirmed(),
                             channel.getAvatarUrl(),
                             post.getText(),
                             post.getImageUrl(),
@@ -376,7 +377,6 @@ public class ChannelService {
         }
         Poll poll = post.getPoll();
         post.setPoll(null);
-        channelPostRepository.delete(post);
         if (poll != null) {
             var pollOptions = pollOptionsRepository.findByPoll(poll);
             pollOptions.forEach(option -> {
@@ -389,6 +389,7 @@ public class ChannelService {
         var channelPostEvaluations = channelPostEvaluationsRepository.findByChannelPost(post);
         channelPostEvaluations.forEach(channelPostEvaluationsRepository::delete);
 
+        channelPostRepository.delete(post);
     }
 
 
@@ -477,7 +478,7 @@ public class ChannelService {
                 .map(comment -> {
                     User author = comment.getUser();
                     Long parentId = comment.getParent() == null ? null : comment.getParent().getId();
-                    return new CommentResponse(comment.getId(), author.getId(), author.getAvatarUrl(), author.getUsername(), parentId,comment.getText(),
+                    return new CommentResponse(comment.getId(), author.getId(), author.getAvatarUrl(), author.getUsername(),author.getConfirmed(), parentId,comment.getText(),
                             dateFormat.format(comment.getDate()));
                 }).toList();
     }
@@ -515,6 +516,7 @@ public class ChannelService {
                 post.getId(),
                 post.getChannel().getId(),
                 post.getChannel().getName(),
+                post.getChannel().getConfirmed(),
                 post.getChannel().getAvatarUrl(),
                 post.getText(),
                 post.getImageUrl(),
@@ -546,12 +548,6 @@ public class ChannelService {
                }
        ).toList();
     }
-
-
-
-
-
-
 
 
     @Transactional

@@ -15,4 +15,5 @@ public class UserProfileData {
     private String username;
     private String link;
     private String avatarUrl;
+    private Boolean confirmed;
 }

@@ -58,10 +58,5 @@ public class ChannelController {
 
 
 
-    @GetMapping("/22")
-    public ResponseEntity<String> dfdft() {
-
-        return ResponseEntity.ok("аааа");
-    }
 
 }

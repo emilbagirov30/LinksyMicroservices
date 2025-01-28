@@ -13,6 +13,7 @@ public class ChannelPostResponse {
     private Long postId;
     private Long channelId;
     private String channelName;
+    private Boolean confirmed;
     private String channelAvatarUrl;
     private String text;
     private String imageUrl;

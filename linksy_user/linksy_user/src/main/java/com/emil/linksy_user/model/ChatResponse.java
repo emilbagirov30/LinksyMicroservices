@@ -14,6 +14,7 @@ public class ChatResponse {
     private Boolean isGroup;
     private String avatarUrl;
     private String displayName;
+    private Boolean confirmed;
     private String lastMessage;
     private String dateLast;
     private Long unreadMessagesCount;

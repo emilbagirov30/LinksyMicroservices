@@ -63,13 +63,14 @@ public class ChatService {
                 .map(chat -> {
           var userMessages =  messageRepository.findByChat(chat).stream()
                   .sorted(Comparator.comparing(Message::getDate)).toList();
-          var filterMessages = userMessages.stream().filter(message -> !deletedMessagesRepository.existsByMessage(message)).toList();
+          var filterMessages = userMessages.stream().filter(message -> !deletedMessagesRepository.existsByMessageAndUser(message,user)).toList();
           if (filterMessages.isEmpty() && !chat.getIsGroup()) return null;
           Message lastMessage = null;
           Long senderId = null;
           String lastMessageText="";
           String dateLast="";
           Long unreadMessagesCount = null;
+          Boolean confirmed = false;
           SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
            if(!filterMessages.isEmpty()) {
                unreadMessagesCount = filterMessages.stream()
@@ -78,6 +79,7 @@ public class ChatService {
                lastMessage = filterMessages.get(filterMessages.size() - 1);
                if (lastMessage.getText() != null) lastMessageText = encryptor.decrypt(lastMessage.getText());
                senderId = lastMessage.getSender().getId();
+               confirmed = lastMessage.getSender().getConfirmed();
                dateLast = dateFormat.format(lastMessage.getDate());
            }
                String avatarUrl;
@@ -95,10 +97,11 @@ public class ChatService {
                    User companion = members.get(0).getId().equals(userId) ? members.get(1) : members.get(0);
                    avatarUrl = companion.getAvatarUrl();
                    displayName = companion.getUsername();
+                   confirmed = companion.getConfirmed();
                    companionId = companion.getId();
                }
 
-        return new ChatResponse(chat.getId(),companionId,senderId,isGroup,avatarUrl,displayName,lastMessageText,dateLast,unreadMessagesCount);
+        return new ChatResponse(chat.getId(),companionId,senderId,isGroup,avatarUrl,displayName,confirmed,lastMessageText,dateLast,unreadMessagesCount);
         }).filter(Objects::nonNull).collect(Collectors.toList());
 
     }
@@ -132,7 +135,7 @@ public class ChatService {
             avatarUrl = chat.getAvatarUrl();
             displayName = chat.getName();
 
-            var response = new ChatResponse(chat.getId(),null,senderId,true,avatarUrl,displayName,lastMessageText,dateLast, unreadMessagesCount);
+            var response = new ChatResponse(chat.getId(),null,senderId,true,avatarUrl,displayName,false,lastMessageText,dateLast, unreadMessagesCount);
             for (User user : users) {
                 unreadMessagesCount = userMessages.stream()
                         .filter(message -> !message.getViewed() && !message.getSender().getId().equals(user.getId()))
@@ -153,9 +156,9 @@ public class ChatService {
                     .filter(message -> !message.getViewed() && !message.getSender().getId().equals(member2.getId()))
                     .count();
             var response1 = new ChatResponse(chat.getId(), member2.getId(), senderId,false, member2.getAvatarUrl(),
-                    member2.getUsername(), lastMessageText,dateLast,unreadMessagesCount1);
+                    member2.getUsername(),member2.getConfirmed(), lastMessageText,dateLast,unreadMessagesCount1);
             var response2 = new ChatResponse(chat.getId(), member1.getId(),senderId, false, member1.getAvatarUrl(),
-                    member1.getUsername(), lastMessageText,dateLast,unreadMessagesCount2);
+                    member1.getUsername(), member1.getConfirmed(),lastMessageText,dateLast,unreadMessagesCount2);
                 messagingTemplate.convertAndSendToUser(encryptor.decrypt(member1.getWsToken()), "/queue/count/", response1);
                 messagingTemplate.convertAndSendToUser(encryptor.decrypt(member2.getWsToken()), "/queue/count/", response2);
                 messagingTemplate.convertAndSendToUser(encryptor.decrypt(member1.getWsToken()), "/queue/chats/", response1);

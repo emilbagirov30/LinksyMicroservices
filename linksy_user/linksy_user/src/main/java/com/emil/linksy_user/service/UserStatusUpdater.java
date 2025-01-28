@@ -13,9 +13,10 @@ import java.util.List;
 public class UserStatusUpdater {
 
     private final UserRepository userRepository;
-
-    public UserStatusUpdater(UserRepository userRepository) {
+    private final LinksyCacheManager linksyCacheManager;
+    public UserStatusUpdater(UserRepository userRepository, LinksyCacheManager linksyCacheManager) {
         this.userRepository = userRepository;
+        this.linksyCacheManager = linksyCacheManager;
     }
 
     @Scheduled(fixedRate = 60000)
@@ -29,6 +30,7 @@ public class UserStatusUpdater {
                     user.getLastActive().plusMinutes(4).isBefore(now)) {
                 user.setOnline(false);
                 userRepository.save(user);
+                linksyCacheManager.cacheUser(user);
             }
         }
     }

@@ -9,10 +9,9 @@ import com.emil.linksy_user.repository.SubscriptionsRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -129,15 +128,27 @@ public class PeopleService {
             return null;
         }
 
-        java.sql.Date sqlDate = (java.sql.Date) birthday;
-        LocalDate birthDate = sqlDate.toLocalDate();
+        LocalDate birthDate;
+
+        if (birthday instanceof java.sql.Date) {
+
+            birthDate = ((java.sql.Date) birthday).toLocalDate();
+        } else {
+            birthDate = birthday.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+        }
+
+
         int age = Period.between(birthDate, LocalDate.now()).getYears();
+
         return DateTimeFormatter.ofPattern("dd.MM.yyyy").format(birthDate) + " (" + age + ")";
     }
 
 
 
-       public void addToBlackList (Long initiatorId,Long userId){
+
+    public void addToBlackList (Long initiatorId,Long userId){
            User initiator = linksyCacheManager.getUserById(initiatorId);
            User user = linksyCacheManager.getUserById(userId);
 

@@ -180,7 +180,6 @@ private final ChannelService channelService;
     public ResponseEntity<List<PostAppreciatedResponse>> getPostAppreciated(@PathVariable("id") Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         var appreciated = channelService.getPostAppreciated(userId,postId);
-        System.out.println(appreciated);
         return ResponseEntity.ok(appreciated);
     }
 
