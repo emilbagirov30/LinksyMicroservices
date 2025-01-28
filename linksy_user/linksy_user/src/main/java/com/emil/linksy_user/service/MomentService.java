@@ -3,7 +3,7 @@ package com.emil.linksy_user.service;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.MomentRepository;
-import com.emil.linksy_user.repository.UserRepository;
+import com.emil.linksy_user.repository.ViewedMomentsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MomentService {
-    private final UserRepository userRepository;
+    private final ViewedMomentsRepository viewedMomentsRepository;
     private final MomentRepository momentRepository;
     private final LinksyCacheManager linksyCacheManager;
 
@@ -36,29 +36,78 @@ public class MomentService {
 
         List<Moment> moments = momentRepository.findByUser(user);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
         return moments.stream()
                 .sorted((moment1, moment2) -> moment2.getPublicationTime().compareTo(moment1.getPublicationTime()))
                 .map(moment -> new MomentResponse(
                         moment.getId(),
+                        user.getId(),
                         user.getUsername(),
                         user.getAvatarUrl(),
                         moment.getImageUrl(),
                         moment.getVideoUrl(),
                         moment.getAudioUrl(),
                         moment.getText(),
-                        dateFormat.format(moment.getPublicationTime())
+                        dateFormat.format(moment.getPublicationTime()),
+                        user.getConfirmed()
                 ))
                 .collect(Collectors.toList());
     }
+
+
+
+    public List<MomentResponse> getUnseenMoments(Long finderId,Long userId){
+        User user = linksyCacheManager.getUserById(userId);
+        User finder = linksyCacheManager.getUserById(finderId);
+        List<Moment> moments = momentRepository.findByUser(user);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
+        return moments.stream()
+                .filter(moment -> !viewedMomentsRepository.existsByUserAndMoment(finder, moment))
+                .sorted((moment1, moment2) -> moment2.getPublicationTime().compareTo(moment1.getPublicationTime()))
+                .map(moment -> new MomentResponse(
+                        moment.getId(),
+                        user.getId(),
+                        user.getUsername(),
+                        user.getAvatarUrl(),
+                        moment.getImageUrl(),
+                        moment.getVideoUrl(),
+                        moment.getAudioUrl(),
+                        moment.getText(),
+                        dateFormat.format(moment.getPublicationTime()),
+                        user.getConfirmed()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+
+
+
+
+
     public void deleteMoment (Long userId,long momentId) {
         User user = linksyCacheManager.getUserById(userId);
         Moment moment = momentRepository.findById(momentId)
-                .orElseThrow(() -> new NotFoundException("Post not found"));
+                .orElseThrow(() -> new NotFoundException("Moment not found"));
         if (!moment.getUser().getId().equals(user.getId())) {
             throw new SecurityException("User does not own the moment");
         }
         momentRepository.delete(moment);
     }
+
+
+    public void viewMoment (Long userId,Long momentId){
+        User user = linksyCacheManager.getUserById(userId);
+        Moment moment = momentRepository.findById(momentId)
+                .orElseThrow(() -> new NotFoundException("Moment not found"));
+        ViewedMoment viewedMoment = new ViewedMoment();
+        viewedMoment.setUser(user);
+        viewedMoment.setMoment(moment);
+        viewedMomentsRepository.save(viewedMoment);
+    }
+
+
+
 
 }

@@ -5,6 +5,7 @@ import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.ChannelPostResponse;
 import com.emil.linksy_user.model.PostResponse;
 import com.emil.linksy_user.model.RecommendationResponse;
+import com.emil.linksy_user.model.UnseenSubscriptionMomentResponse;
 import com.emil.linksy_user.service.FeedService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,7 @@ private final FeedService feedService;
 
 
     @GetMapping("/users")
-    public ResponseEntity<List<PostResponse>> getUserPosts() {
+    public ResponseEntity<List<PostResponse>> geAllUserPosts() {
         Long useId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         var posts = feedService.getAllSubscriptionsPosts(useId);
         return ResponseEntity.ok(posts);
@@ -47,6 +48,14 @@ private final FeedService feedService;
         Long useId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         var recommendations = feedService.getRecommendation(useId);
         return ResponseEntity.ok(recommendations);
+    }
+
+
+    @GetMapping("/moments")
+    public ResponseEntity<List<UnseenSubscriptionMomentResponse>> getUnseenMoments() {
+        Long useId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var moments = feedService.getUnseenMoments(useId);
+        return ResponseEntity.ok(moments);
     }
 
 

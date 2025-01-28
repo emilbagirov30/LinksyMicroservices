@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MomentResponse {
     private Long momentId;
+    private Long authorId;
     private String authorUsername;
     private String authorAvatarUrl;
     private String imageUrl;
@@ -16,4 +17,5 @@ public class MomentResponse {
     private String audioUrl;
     private String text;
     private String publishDate;
+    private Boolean confirmed;
 }

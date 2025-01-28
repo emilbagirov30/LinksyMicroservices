@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +22,9 @@ public class FeedService {
       private final PostService postService;
       private final PeopleService peopleService;
     private final LinksyCacheManager linksyCacheManager;
+    private final MomentService momentService;
+    private final MomentRepository momentRepository;
+    private final ViewedMomentsRepository viewedMomentsRepository;
     public List<ChannelPostResponse> getAllChannelPosts (Long userId){
         User user = linksyCacheManager.getUserById(userId);
         var members = channelMemberRepository.findByUser(user);
@@ -99,6 +101,34 @@ public class FeedService {
 
         return combinedList;
     }
+    public List<UnseenSubscriptionMomentResponse> getUnseenMoments(Long userId) {
+        User finder = linksyCacheManager.getUserById(userId);
+        List<Subscriptions> subscriptionsList = subscriptionsRepository.findAllBySubscriber(finder);
+        List<UnseenSubscriptionMomentResponse> unseenMoments = new ArrayList<>();
+
+        for (Subscriptions subscription : subscriptionsList) {
+            User subscribedUser = subscription.getUser();
+            List<Moment> moments = momentRepository.findByUser(subscribedUser);
+            List<Moment> unseenUserMoments = moments.stream()
+                    .filter(moment -> !viewedMomentsRepository.existsByUserAndMoment(finder, moment))
+                    .toList();
+
+           if (!unseenUserMoments.isEmpty()) {
+               unseenMoments.add(
+                       new UnseenSubscriptionMomentResponse(
+                               subscribedUser.getId(),
+                               subscribedUser.getAvatarUrl(),
+                               subscribedUser.getUsername(),
+                               subscribedUser.getConfirmed()
+                       )
+               );
+           }
+        }
+        return unseenMoments;
+    }
+
+
+
 
 
 }

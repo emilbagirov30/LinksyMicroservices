@@ -31,6 +31,21 @@ public class MomentController {
         momentService.deleteMoment(userId,momentId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/view")
+    public ResponseEntity<Void> viewMoment(@RequestParam Long momentId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        momentService.viewMoment(userId,momentId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/unseen_moments")
+    public ResponseEntity<List<MomentResponse>> getUnseenMoments(@RequestParam Long userId) {
+        Long finderId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<MomentResponse> userMoments = momentService.getUnseenMoments(finderId,userId);
+        return ResponseEntity.ok(userMoments);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
