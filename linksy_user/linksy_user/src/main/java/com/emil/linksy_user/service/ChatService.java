@@ -230,6 +230,25 @@ public class ChatService {
     }
 
 
+
+
+    public List<UserResponse> getGroupSenders (Long userId, Long chatId) {
+        User requester = linksyCacheManager.getUserById(userId);
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+        boolean isMember = chatMemberRepository.existsByChatAndUser(chat, requester);
+        if (!isMember) {
+            throw new AccessDeniedException("User is not a member of this chat");
+        }
+        var senders = messageRepository.findByChat(chat).stream().map(Message::getSender).toList();
+        return senders.stream()
+                .map(user -> {
+
+                    return new UserResponse(user.getId(), user.getAvatarUrl(), user.getUsername(), user.getLink(),user.getOnline(),user.getConfirmed());
+                })
+                .toList();
+    }
+
     public GroupResponse getGroupData (Long userId, Long chatId){
         User user = linksyCacheManager.getUserById(userId);
         Chat chat = chatRepository.findById(chatId)

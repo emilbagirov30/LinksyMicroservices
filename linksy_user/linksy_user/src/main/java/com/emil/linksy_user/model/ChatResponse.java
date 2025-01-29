@@ -18,4 +18,5 @@ public class ChatResponse {
     private String lastMessage;
     private String dateLast;
     private Long unreadMessagesCount;
+
 }
