@@ -5,6 +5,7 @@ import com.emil.linksy_user.exception.BlacklistException;
 import com.emil.linksy_user.exception.BlockedException;
 import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.repository.BlackListRepository;
+import com.emil.linksy_user.repository.ReportRepository;
 import com.emil.linksy_user.repository.SubscriptionsRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class PeopleService {
     private final SubscriptionsRepository subscriptionsRepository;
     private final BlackListRepository blackListRepository;
     private final LinksyCacheManager linksyCacheManager;
+    private final ReportRepository reportRepository;
     public List<UserResponse> findByLink(Long userId, String startsWith) {
         List<User> userList = userRepository.findByLinkStartingWith(startsWith);
         var filterUer = userList.stream().filter(user -> !user.getBlocked()).toList();
@@ -182,6 +184,27 @@ public class PeopleService {
 
     private boolean isBlocked (User finder,User user){
           return blackListRepository.existsByInitiatorAndBlocked(user,finder);
+    }
+
+
+    public void addReport (Long senderId, ReportRequest request){
+        User sender = linksyCacheManager.getUserById(senderId);
+        Long channelId = request.getChannelId();
+        Long userId = request.getUserId();
+        String reason = request.getReason();
+        Channel channel = null;
+        User user = null;
+        if (channelId!=null){
+           channel = linksyCacheManager.getChannelById(channelId);
+        }else if (userId!=null){
+            user = linksyCacheManager.getUserById(userId);
+        }
+        Report report = new Report();
+        report.setSender(sender);
+        report.setUser(user);
+        report.setChannel(channel);
+        report.setReason(reason);
+        reportRepository.save(report);
     }
 
 

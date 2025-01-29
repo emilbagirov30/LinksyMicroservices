@@ -3,10 +3,7 @@ package com.emil.linksy_user.controller;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.exception.BlacklistException;
 import com.emil.linksy_user.exception.BlockedException;
-import com.emil.linksy_user.model.MomentResponse;
-import com.emil.linksy_user.model.PostResponse;
-import com.emil.linksy_user.model.UserPageData;
-import com.emil.linksy_user.model.UserResponse;
+import com.emil.linksy_user.model.*;
 import com.emil.linksy_user.service.MomentService;
 import com.emil.linksy_user.service.PeopleService;
 import com.emil.linksy_user.service.PostService;
@@ -126,6 +123,14 @@ public class PeopleController {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
        var list = peopleService.getEveryoneOffTheBlacklist(userId);
         return ResponseEntity.ok(list);
+    }
+
+
+    @PostMapping("/add/report")
+    public ResponseEntity<Void> addReport(@RequestBody ReportRequest request) {
+        Long senderId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        peopleService.addReport(senderId,request);
+        return ResponseEntity.ok().build();
     }
 
 
