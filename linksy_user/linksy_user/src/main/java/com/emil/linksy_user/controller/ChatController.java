@@ -5,7 +5,6 @@ import com.emil.linksy_user.model.ChatResponse;
 import com.emil.linksy_user.model.GroupResponse;
 import com.emil.linksy_user.model.UserResponse;
 import com.emil.linksy_user.service.ChatService;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;

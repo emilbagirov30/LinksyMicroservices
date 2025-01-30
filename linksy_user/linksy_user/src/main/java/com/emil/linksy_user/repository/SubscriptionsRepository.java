@@ -1,7 +1,7 @@
 package com.emil.linksy_user.repository;
 
-import com.emil.linksy_user.model.Subscriptions;
-import com.emil.linksy_user.model.User;
+import com.emil.linksy_user.model.entity.Subscriptions;
+import com.emil.linksy_user.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

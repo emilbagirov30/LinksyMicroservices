@@ -1,6 +1,8 @@
 package com.emil.linksy_user.repository;
 
-import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.Chat;
+import com.emil.linksy_user.model.entity.ChatMember;
+import com.emil.linksy_user.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 

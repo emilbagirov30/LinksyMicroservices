@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -8,19 +8,20 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "linksy_channel_posts")
+@Table(name = "linksy_moments")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ChannelPost {
+public class Moment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "channel_id")
-    private Channel channel;
-    private String text;
+    @JoinColumn(name = "author_id")
+    private User user;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "publication_time",nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
@@ -31,9 +32,5 @@ public class ChannelPost {
     private String videoUrl;
     @Column(name = "audio_url")
     private String audioUrl;
-
-    @ManyToOne
-    @JoinColumn(name = "poll_id")
-    private Poll poll;
-    private Boolean edited;
+    private String text;
 }

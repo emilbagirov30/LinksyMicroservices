@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,22 +6,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "linksy_voters",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "option_id"}))
+@Table(name = "linksy_channel_posts_evaluations",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"channel_post_id", "user_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Voter {
-
+public class ChannelPostEvaluations {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
     @ManyToOne
-    @JoinColumn(name = "option_id")
-    private PollOptions option;
+    @JoinColumn(name = "channel_post_id")
+    private ChannelPost channelPost;
+    private int score;
 }

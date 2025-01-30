@@ -1,6 +1,7 @@
 package com.emil.linksy_user.repository;
 
-import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.ChannelPost;
+import com.emil.linksy_user.model.entity.ChannelPostComment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,7 +1,6 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Entity
@@ -13,7 +12,6 @@ public class ChatMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @ManyToOne
     @JoinColumn(name = "chat_id")

@@ -3,12 +3,11 @@ package com.emil.linksy_user.service;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.exception.BlacklistException;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.*;
 import com.emil.linksy_user.repository.*;
 import com.emil.linksy_user.util.LinksyEncryptor;
 import com.emil.linksy_user.util.MessageMode;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
@@ -96,7 +95,6 @@ public class MessageService {
     }
 
     public List<MessageResponse> getUserMessages(Long userId){
-
         User user = linksyCacheManager.getUserById(userId);
         List<ChatMember> chatMembers= chatMemberRepository.findByUser(user);
         List<Chat> chats = chatMembers.stream().map(ChatMember::getChat).toList();
@@ -104,23 +102,9 @@ public class MessageService {
                 .flatMap(chat -> messageRepository.findByChat(chat).stream())
                 .toList();
         var filterMessages = messages.stream().filter(message ->  !deletedMessagesRepository.existsByMessageAndUser(message,user)).toList();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
         return filterMessages.stream()
                 .sorted((message1, message2) -> message2.getDate().compareTo(message1.getDate()))
-                .map(message ->
-                        new MessageResponse(
-                        message.getId(),
-                        message.getSender().getId(),
-                        message.getChat().getId(),
-                        encryptor.decrypt(message.getText()),
-                        encryptor.decrypt(message.getImageUrl()),
-                        encryptor.decrypt(message.getVideoUrl()),
-                        encryptor.decrypt(message.getAudioUrl()),
-                        encryptor.decrypt(message.getVoiceUrl()),
-                        dateFormat.format(message.getDate()),
-                        message.getViewed(),message.getEdited()
-
-                ))
+                .map(this::toMessageResponse)
                 .collect(Collectors.toList());
     }
 
@@ -134,23 +118,32 @@ public class MessageService {
 
         var messages =  messageRepository.findByChat(chat);
         var filterMessages = messages.stream().filter(message ->  !deletedMessagesRepository.existsByMessageAndUser(message,user)).toList();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
         return filterMessages.stream()
                 .sorted(Comparator.comparing(Message::getDate))
-                .map(message -> new MessageResponse(
-                        message.getId(),
-                        message.getSender().getId(),
-                        message.getChat().getId(),
-                        encryptor.decrypt(message.getText()),
-                        encryptor.decrypt(message.getImageUrl()),
-                        encryptor.decrypt(message.getVideoUrl()),
-                        encryptor.decrypt( message.getAudioUrl()),
-                        encryptor.decrypt(message.getVoiceUrl()),
-                        dateFormat.format(message.getDate()),
-                        message.getViewed(),message.getEdited()
-                ))
+                .map(this::toMessageResponse)
                 .collect(Collectors.toList());
     }
+
+
+    public MessageResponse toMessageResponse(Message message){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        return  new MessageResponse(
+                message.getId(),
+                message.getSender().getId(),
+                message.getChat().getId(),
+                encryptor.decrypt(message.getText()),
+                encryptor.decrypt(message.getImageUrl()),
+                encryptor.decrypt(message.getVideoUrl()),
+                encryptor.decrypt( message.getAudioUrl()),
+                encryptor.decrypt(message.getVoiceUrl()),
+                dateFormat.format(message.getDate()),
+                message.getViewed(),message.getEdited()
+        );
+    }
+
+
+
+
 
     public void setViewed (Long userId,Long chatId){
         Chat chat = chatRepository.findById(chatId)

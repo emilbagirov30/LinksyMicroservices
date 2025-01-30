@@ -183,9 +183,6 @@ private final ChannelService channelService;
         return ResponseEntity.ok(appreciated);
     }
 
-
-
-
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404

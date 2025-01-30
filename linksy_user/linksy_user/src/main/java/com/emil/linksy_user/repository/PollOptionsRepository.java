@@ -1,7 +1,7 @@
 package com.emil.linksy_user.repository;
 
-import com.emil.linksy_user.model.Poll;
-import com.emil.linksy_user.model.PollOptions;
+import com.emil.linksy_user.model.entity.Poll;
+import com.emil.linksy_user.model.entity.PollOptions;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

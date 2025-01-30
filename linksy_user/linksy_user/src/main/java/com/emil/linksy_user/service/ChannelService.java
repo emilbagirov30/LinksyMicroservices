@@ -3,6 +3,7 @@ package com.emil.linksy_user.service;
 import com.emil.linksy_user.exception.BlockedException;
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.*;
 import com.emil.linksy_user.repository.*;
 import com.emil.linksy_user.util.ChannelType;
 import jakarta.transaction.Transactional;
@@ -201,9 +202,8 @@ public class ChannelService {
     }
 
     public void acceptUserToChannel(Long ownerId, Long channelId, Long candidateId) {
-        User owner = linksyCacheManager.getUserById(ownerId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
-        if (!channel.getOwner().equals(owner)) throw new SecurityException("User is not the owner channel");
+        if (!channel.getOwner().getId().equals(ownerId)) throw new SecurityException("User is not the owner channel");
         User candidate = linksyCacheManager.getUserById(candidateId);
         ChannelMember channelMember = new ChannelMember();
         channelMember.setUser(candidate);
@@ -214,7 +214,6 @@ public class ChannelService {
     }
 
     public void rejectSubscriptionRequest(Long ownerId, Long channelId, Long candidateId) {
-        User owner = linksyCacheManager.getUserById(ownerId);
         Channel channel = linksyCacheManager.getChannelById(channelId);
         if (!channel.getOwner().getId().equals(ownerId)) throw new SecurityException("User is not the owner channel");
         User candidate =  linksyCacheManager.getUserById(candidateId);

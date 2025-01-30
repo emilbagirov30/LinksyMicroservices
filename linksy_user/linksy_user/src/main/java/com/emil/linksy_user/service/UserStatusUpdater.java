@@ -1,6 +1,6 @@
 package com.emil.linksy_user.service;
 
-import com.emil.linksy_user.model.User;
+import com.emil.linksy_user.model.entity.User;
 import com.emil.linksy_user.repository.UserRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;

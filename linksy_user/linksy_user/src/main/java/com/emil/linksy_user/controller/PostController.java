@@ -68,7 +68,7 @@ public ResponseEntity<Void> deletePost(@RequestParam Long postId) {
     @GetMapping("/{id}/likes")
     public ResponseEntity<List<UserResponse>> getPostLikes(@PathVariable("id") Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        var users = postService.getPostLikes(userId,postId);
+        var users = postService.getPostLikes(postId);
         System.out.println(users.size());
         return ResponseEntity.ok(users);
     }

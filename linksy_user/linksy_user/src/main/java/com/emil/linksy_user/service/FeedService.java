@@ -1,6 +1,7 @@
 package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.*;
 import com.emil.linksy_user.repository.*;
 import com.emil.linksy_user.util.ChannelType;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +16,13 @@ public class FeedService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final ChannelMemberRepository channelMemberRepository;
-     private final ChannelService channelService;
+    private final ChannelService channelService;
     private final SubscriptionsRepository subscriptionsRepository;
     private final PostRepository postRepository;
     private final BlackListRepository blackListRepository;
-      private final PostService postService;
-      private final PeopleService peopleService;
+    private final PostService postService;
+    private final PeopleService peopleService;
     private final LinksyCacheManager linksyCacheManager;
-    private final MomentService momentService;
     private final MomentRepository momentRepository;
     private final ViewedMomentsRepository viewedMomentsRepository;
     public List<ChannelPostResponse> getAllChannelPosts (Long userId){
@@ -55,8 +55,8 @@ public class FeedService {
 
     public List<RecommendationResponse> getRecommendation(Long userId) {
         User requester = linksyCacheManager.getUserById(userId);
-        var channels = channelRepository.findAll();
-        var users = userRepository.findAll();
+        var channels = linksyCacheManager.getAllChannels();
+        var users = linksyCacheManager.getAllUsers();
         var filterChannels = channels.stream()
                 .filter(channel -> !channelMemberRepository.existsByChannelAndUser(channel, requester)
                         && channel.getType() != ChannelType.PRIVATE
@@ -126,9 +126,5 @@ public class FeedService {
         }
         return unseenMoments;
     }
-
-
-
-
 
 }

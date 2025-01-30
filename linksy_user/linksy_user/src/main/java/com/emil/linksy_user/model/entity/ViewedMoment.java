@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -7,30 +7,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "linksy_reports")
+@Table(name = "linksy_viewed_moments",  uniqueConstraints = @UniqueConstraint(columnNames = {"moment_id", "user_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Report {
+public class ViewedMoment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @ManyToOne
-    @JoinColumn(name = "sender_id")
-    private User sender;
-
-
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "channel_id")
-    private Channel channel;
+    @JoinColumn(name = "moment_id")
+    private Moment moment;
 
-    private String reason;
 
 }

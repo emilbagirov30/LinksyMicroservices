@@ -2,6 +2,7 @@ package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.*;
 import com.emil.linksy_user.repository.ChatMemberRepository;
 import com.emil.linksy_user.repository.ChatRepository;
 import com.emil.linksy_user.repository.DeletedMessagesRepository;
@@ -282,11 +283,8 @@ public class ChatService {
         chat.setName(response.getName());
         chat.setAvatarUrl(response.getAvatarUrl());
         chat = chatRepository.save(chat);
-
         var members = response.getParticipantIds();
-
         List<ChatMember> chatMembers = new ArrayList<>();
-
         for (Long memberId : members) {
             User user = linksyCacheManager.getUserById(memberId);
 
@@ -304,7 +302,8 @@ public class ChatService {
         User user = linksyCacheManager.getUserById(userId);
         Chat chat = chatRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Chat not found"));
-
+        var isMember = chatMemberRepository.existsByChatAndUser(chat,user);
+        if(!isMember) throw new AccessDeniedException("Пользователь не состоит в группе");
         for (Long newMemberId:newMembersList){
             ChatMember chatMember = new ChatMember();
            User newMember = linksyCacheManager.getUserById(newMemberId);

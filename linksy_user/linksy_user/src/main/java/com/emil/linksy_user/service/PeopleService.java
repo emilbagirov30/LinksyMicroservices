@@ -4,6 +4,7 @@ import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.exception.BlacklistException;
 import com.emil.linksy_user.exception.BlockedException;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.*;
 import com.emil.linksy_user.repository.BlackListRepository;
 import com.emil.linksy_user.repository.ReportRepository;
 import com.emil.linksy_user.repository.SubscriptionsRepository;
@@ -129,11 +130,8 @@ public class PeopleService {
         if (birthday == null) {
             return null;
         }
-
         LocalDate birthDate;
-
         if (birthday instanceof java.sql.Date) {
-
             birthDate = ((java.sql.Date) birthday).toLocalDate();
         } else {
             birthDate = birthday.toInstant()
@@ -141,9 +139,7 @@ public class PeopleService {
                     .toLocalDate();
         }
 
-
         int age = Period.between(birthDate, LocalDate.now()).getYears();
-
         return DateTimeFormatter.ofPattern("dd.MM.yyyy").format(birthDate) + " (" + age + ")";
     }
 

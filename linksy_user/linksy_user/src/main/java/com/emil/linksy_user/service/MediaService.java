@@ -14,16 +14,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 public class MediaService {
-    private final KafkaTemplate<String, MediaRequest> kafkaAvatarTemplate;
     private final UserService userService;
-    private final PostRepository postRepository;
-    private final ConcurrentHashMap<Long, CompletableFuture<Boolean>> uploadStatus = new ConcurrentHashMap<>();
-    private final Map<Long, Object> postLocks = new ConcurrentHashMap<>();
-
     @KafkaListener(topics = "avatarResponse", groupId = "group_id")
     public void consumeAvatar(MediaResponse mediaResponse) {
             userService.saveUserAvatar(mediaResponse);
     }
-
-
 }

@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import com.emil.linksy_user.util.ChannelType;
 import jakarta.persistence.*;

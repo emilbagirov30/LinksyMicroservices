@@ -2,6 +2,10 @@ package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.Post;
+import com.emil.linksy_user.model.entity.User;
+import com.emil.linksy_user.model.entity.UserPostComment;
+import com.emil.linksy_user.model.entity.UserPostLike;
 import com.emil.linksy_user.repository.PostRepository;
 import com.emil.linksy_user.repository.UserPostCommentRepository;
 import com.emil.linksy_user.repository.UserPostLikeRepository;
@@ -56,33 +60,8 @@ public class PostService {
 
     public List<PostResponse> getUserPosts(Long userId) {
         User user = linksyCacheManager.getUserById(userId);
-
         List<Post> posts = postRepository.findByUser(user);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
-        return posts.stream()
-                .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
-                .map(post ->{
-                        Long likesCount = userPostLikeRepository.countByPost(post);
-                        Long commentsCount = userPostCommentRepository.countByPost(post);
-                        Boolean isLikedIt = userPostLikeRepository.existsByPostAndUser(post,user);
-                        Boolean edited = post.getEdited();
-                       return new PostResponse(
-                        post.getId(),
-                        post.getUser().getId(),
-                        user.getUsername(),
-                        user.getConfirmed(),
-                        user.getAvatarUrl(),
-                        post.getImageUrl(),
-                        post.getVideoUrl(),
-                        post.getAudioUrl(),
-                        post.getVoiceUrl(),
-                        post.getText(),
-                        dateFormat.format(post.getPublicationTime()),
-                               likesCount,
-                        commentsCount, isLikedIt,edited
-
-                );}).toList();
+        return toPostResponse(user,posts);
     }
 
     public Long likesCount(User user){
@@ -94,12 +73,6 @@ public class PostService {
         }
         return totalLikesCount;
     }
-
-
-
-
-
-
 
 
     public List<PostResponse> toPostResponse (User finder,List<Post> posts){
@@ -134,34 +107,10 @@ public class PostService {
     public List<PostResponse> getOutsiderUserPosts(Long finderId,Long userId) {
         User user = linksyCacheManager.getUserById(userId);
         User finder = linksyCacheManager.getUserById(finderId);
-
         List<Post> posts = postRepository.findByUser(user);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
-        return posts.stream()
-                .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
-                .map(post ->{
-                    Long likesCount = userPostLikeRepository.countByPost(post);
-                    Long commentsCount = userPostCommentRepository.countByPost(post);
-                    Boolean isLikedIt = userPostLikeRepository.existsByPostAndUser(post,finder);
-                    Boolean edited = post.getEdited();
-                    return new PostResponse(
-                            post.getId(),
-                            post.getUser().getId(),
-                            user.getUsername(),
-                            post.getUser().getConfirmed(),
-                            user.getAvatarUrl(),
-                            post.getImageUrl(),
-                            post.getVideoUrl(),
-                            post.getAudioUrl(),
-                            post.getVoiceUrl(),
-                            post.getText(),
-                            dateFormat.format(post.getPublicationTime()),
-                            likesCount,
-                            commentsCount, isLikedIt,edited
-
-                    );}).toList();
+        return toPostResponse(finder,posts);
     }
+
 
     @Transactional
 public void deletePost (Long userId,long postId) {
@@ -243,10 +192,9 @@ public void deletePost (Long userId,long postId) {
     }
 
 
-    public List<UserResponse> getPostLikes (Long userId,Long postId){
+    public List<UserResponse> getPostLikes (Long postId){
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
-        User user = linksyCacheManager.getUserById(userId);
         var likes = userPostLikeRepository.findByPost(post);
        return likes.stream().map(userPostLike -> {
            User likeUser = userPostLike.getUser();

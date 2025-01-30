@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;

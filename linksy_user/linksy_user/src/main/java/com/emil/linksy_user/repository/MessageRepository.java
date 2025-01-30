@@ -1,12 +1,9 @@
 package com.emil.linksy_user.repository;
 
-import com.emil.linksy_user.model.Chat;
-import com.emil.linksy_user.model.Message;
-import com.emil.linksy_user.model.Post;
-import com.emil.linksy_user.model.User;
+import com.emil.linksy_user.model.entity.Chat;
+import com.emil.linksy_user.model.entity.Message;
+import com.emil.linksy_user.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 

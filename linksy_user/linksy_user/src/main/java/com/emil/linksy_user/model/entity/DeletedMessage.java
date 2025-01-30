@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "linksy_deleted_messages")
+@Table(name = "linksy_deleted_messages", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "message_id"}))
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

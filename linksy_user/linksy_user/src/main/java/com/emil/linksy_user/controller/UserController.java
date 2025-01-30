@@ -1,6 +1,7 @@
 package com.emil.linksy_user.controller;
 import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.User;
 import com.emil.linksy_user.service.UserService;
 import com.emil.linksy_user.util.MessageMode;
 import org.springframework.http.HttpStatus;

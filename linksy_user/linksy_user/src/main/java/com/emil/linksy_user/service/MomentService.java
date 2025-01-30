@@ -2,6 +2,9 @@ package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.NotFoundException;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.Moment;
+import com.emil.linksy_user.model.entity.User;
+import com.emil.linksy_user.model.entity.ViewedMoment;
 import com.emil.linksy_user.repository.MomentRepository;
 import com.emil.linksy_user.repository.ViewedMomentsRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,24 +36,10 @@ public class MomentService {
     }
     public List<MomentResponse> getUserMoments(Long userId) {
         User user = linksyCacheManager.getUserById(userId);
-
         List<Moment> moments = momentRepository.findByUser(user);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
         return moments.stream()
                 .sorted((moment1, moment2) -> moment2.getPublicationTime().compareTo(moment1.getPublicationTime()))
-                .map(moment -> new MomentResponse(
-                        moment.getId(),
-                        user.getId(),
-                        user.getUsername(),
-                        user.getAvatarUrl(),
-                        moment.getImageUrl(),
-                        moment.getVideoUrl(),
-                        moment.getAudioUrl(),
-                        moment.getText(),
-                        dateFormat.format(moment.getPublicationTime()),
-                        user.getConfirmed()
-                ))
+                .map(moment ->  toMomentResponse(user,moment))
                 .collect(Collectors.toList());
     }
 
@@ -60,29 +49,30 @@ public class MomentService {
         User user = linksyCacheManager.getUserById(userId);
         User finder = linksyCacheManager.getUserById(finderId);
         List<Moment> moments = momentRepository.findByUser(user);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
         return moments.stream()
                 .filter(moment -> !viewedMomentsRepository.existsByUserAndMoment(finder, moment))
                 .sorted((moment1, moment2) -> moment2.getPublicationTime().compareTo(moment1.getPublicationTime()))
-                .map(moment -> new MomentResponse(
-                        moment.getId(),
-                        user.getId(),
-                        user.getUsername(),
-                        user.getAvatarUrl(),
-                        moment.getImageUrl(),
-                        moment.getVideoUrl(),
-                        moment.getAudioUrl(),
-                        moment.getText(),
-                        dateFormat.format(moment.getPublicationTime()),
-                        user.getConfirmed()
-                ))
+                .map(moment -> toMomentResponse(user,moment))
                 .collect(Collectors.toList());
     }
 
 
 
-
+   public MomentResponse toMomentResponse(User user,Moment moment){
+       SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM HH:mm");
+     return new MomentResponse(
+               moment.getId(),
+               user.getId(),
+               user.getUsername(),
+               user.getAvatarUrl(),
+               moment.getImageUrl(),
+               moment.getVideoUrl(),
+               moment.getAudioUrl(),
+               moment.getText(),
+               dateFormat.format(moment.getPublicationTime()),
+               user.getConfirmed()
+       );
+   }
 
 
 

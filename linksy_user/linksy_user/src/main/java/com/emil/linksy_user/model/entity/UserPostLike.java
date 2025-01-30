@@ -1,4 +1,4 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

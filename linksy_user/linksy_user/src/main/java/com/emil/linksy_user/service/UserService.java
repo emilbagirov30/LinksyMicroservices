@@ -2,6 +2,7 @@ package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.User;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
@@ -33,6 +34,7 @@ public class UserService {
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
     private final LinksyCacheManager linksyCacheManager;
     private final LinksyEncryptor encryptor;
+
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");

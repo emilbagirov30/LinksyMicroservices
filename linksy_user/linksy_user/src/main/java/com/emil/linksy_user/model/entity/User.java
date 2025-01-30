@@ -1,15 +1,13 @@
-package com.emil.linksy_user.model;
+package com.emil.linksy_user.model.entity;
 
 import com.emil.linksy_user.util.MessageMode;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
