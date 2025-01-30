@@ -16,7 +16,9 @@ Linksy предоставляет удобный и интуитивно пон�
 - Java  
 - Spring Boot  
 - Spring Security  
-- Spring Gateway  
+- Spring Gateway
+- Spring Web
+- WebSocket
 - Hibernate + JPA  
 - Lombok  
 - PostgreSQL  
@@ -42,7 +44,9 @@ Linksy provides a user-friendly and intuitive interface, making the app convenie
 - Java  
 - Spring Boot  
 - Spring Security  
-- Spring Gateway  
+- Spring Gateway
+- Spring Web
+- WebSocket  
 - Hibernate + JPA  
 - Lombok  
 - PostgreSQL  
