@@ -80,6 +80,10 @@ public class MomentService {
         User user = linksyCacheManager.getUserById(userId);
         Moment moment = momentRepository.findById(momentId)
                 .orElseThrow(() -> new NotFoundException("Moment not found"));
+        var viewedMoments = viewedMomentsRepository.findByMoment(moment);
+        for (ViewedMoment vm:viewedMoments){
+            viewedMomentsRepository.delete(vm);
+        }
         if (!moment.getUser().getId().equals(user.getId())) {
             throw new SecurityException("User does not own the moment");
         }

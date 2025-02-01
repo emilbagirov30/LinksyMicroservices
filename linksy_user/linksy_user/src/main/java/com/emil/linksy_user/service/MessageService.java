@@ -184,7 +184,7 @@ public class MessageService {
         Chat chat = message.getChat();
         var members = chatMemberRepository.findByChat(chat);
         var users = members.stream().map(ChatMember::getUser).toList();
-        message.setText(text);
+        message.setText(encryptor.encrypt(text));
         message.setEdited(true);
         messageRepository.save(message);
             var response = new EditMessageResponse(messageId,text);

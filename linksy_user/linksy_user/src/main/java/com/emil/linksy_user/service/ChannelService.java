@@ -72,13 +72,13 @@ public class ChannelService {
 
     public List<ChannelResponse> findByLink(String prefix) {
         var channels = channelRepository.findByLinkStartingWith(prefix);
-        return mapToChannelResponse(channels);
+        return mapToChannelResponse(channels.stream().filter(channel -> !channel.getBlocked()).toList());
     }
 
 
     public List<ChannelResponse> findByName(String prefix) {
         var channels = channelRepository.findByNameStartingWith(prefix);
-        return mapToChannelResponse(channels);
+        return mapToChannelResponse(channels.stream().filter(channel -> !channel.getBlocked()).toList());
     }
 
     private List<ChannelResponse> mapToChannelResponse(List<Channel> channels) {
@@ -271,11 +271,13 @@ public class ChannelService {
                     channelPost.setPoll(poll);
                     var options = response.getOptions();
                     for (String option : options) {
-                        PollOptions pollOptions = new PollOptions();
-                        pollOptions.setPoll(poll);
-                        pollOptions.setOption(option);
-                        pollOptions.setSelectedCount(0L);
-                        pollOptionsRepository.save(pollOptions);
+                        if(!option.isEmpty()) {
+                            PollOptions pollOptions = new PollOptions();
+                            pollOptions.setPoll(poll);
+                            pollOptions.setOption(option);
+                            pollOptions.setSelectedCount(0L);
+                            pollOptionsRepository.save(pollOptions);
+                        }
                     }
                 }
             } else channelPost.setPoll(null);
@@ -368,6 +370,8 @@ public class ChannelService {
                 .toList();
     }
 
+
+    @Transactional
     public void deletePost(Long userId, long postId) {
         ChannelPost post = channelPostRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
@@ -384,6 +388,10 @@ public class ChannelService {
             });
             pollOptions.forEach(pollOptionsRepository::delete);
             pollRepository.delete(poll);
+        }
+        var comments = channelPostCommentsRepository.findByChannelPost(post);
+        for (ChannelPostComment comment:comments ){
+            channelPostCommentsRepository.delete(comment);
         }
         var channelPostEvaluations = channelPostEvaluationsRepository.findByChannelPost(post);
         channelPostEvaluations.forEach(channelPostEvaluationsRepository::delete);
