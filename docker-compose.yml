@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_LISTENER_NAMES: INTERNAL
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092
+      KAFKA_LISTENER_PORT: 9092
+      KAFKA_LISTENER_NAME_INTERNAL: INTERNAL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+       POSTGRES_USER: ${POSTGRES_USER}
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+       POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+ 
+  linksy_email:
+    build:
+      context: ./linksy_email 
+    container_name: linksy_email
+    ports:
+      - "9615:9615" 
+    depends_on:
+      - kafka
+
+  
+  linksy_user:
+    build:
+      context: ./linksy_user 
+    container_name: linksy_user
+    ports:
+      - "9614:9614"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+
+  linksy_gateway:
+    build:
+      context: ./linksy_gateway 
+    container_name: linksy_gateway
+    ports:
+      - "443:443" 
+    depends_on:
+      - kafka
+
+
+  linksy_cloud:
+    build:
+      context: ./linksy_cloud 
+    container_name: linksy_cloud
+    volumes:
+      - /mnt/host/h/uploads/image/:/app/uploads/image/
+      - /mnt/host/h/uploads/video/:/app/uploads/video/
+      - /mnt/host/h/uploads/audio/:/app/uploads/audio/
+      - /mnt/host/h/uploads/voice/:/app/uploads/voice/
+    ports:
+      - "9616:9616"
+    depends_on:
+      - kafka
+
+volumes:
+  postgres_data: 
+    driver: local
