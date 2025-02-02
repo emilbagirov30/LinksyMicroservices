@@ -23,7 +23,7 @@ Linksy предоставляет удобный и интуитивно пон�
 - Lombok  
 - PostgreSQL  
 - Kafka  
-- Redis
+- Redis 
 - Docker 
 ---
 
@@ -52,5 +52,5 @@ Linksy provides a user-friendly and intuitive interface, making the app convenie
 - Lombok  
 - PostgreSQL  
 - Kafka  
-- Redis
+- Redis  
 - Docker
