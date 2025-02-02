@@ -2,13 +2,20 @@ package com.emil.linksy_user.service;
 
 import com.emil.linksy_user.exception.*;
 import com.emil.linksy_user.model.*;
+import com.emil.linksy_user.model.entity.Chat;
+import com.emil.linksy_user.model.entity.ChatMember;
+import com.emil.linksy_user.model.entity.Message;
 import com.emil.linksy_user.model.entity.User;
+import com.emil.linksy_user.repository.ChatMemberRepository;
+import com.emil.linksy_user.repository.ChatRepository;
+import com.emil.linksy_user.repository.MessageRepository;
 import com.emil.linksy_user.repository.UserRepository;
 import com.emil.linksy_user.security.JwtToken;
 import com.emil.linksy_user.security.TokenType;
 import com.emil.linksy_user.util.CodeGenerator;
 import com.emil.linksy_user.util.LinksyEncryptor;
 import com.emil.linksy_user.util.MessageMode;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,10 +24,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -34,7 +38,7 @@ public class UserService {
     private final Map<Long, Object> userLocks = new ConcurrentHashMap<>();
     private final LinksyCacheManager linksyCacheManager;
     private final LinksyEncryptor encryptor;
-
+    private final ChatService chatService;
     public void registerUser(String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
@@ -65,17 +69,18 @@ public class UserService {
     public void sendCodeToConfirmThePasswordChange(String email) {
         kafkaEmailTemplate.send("emails", getEmailRequest(email, "Your password change code: "));
     }
-
+    @Transactional
     public void confirmCode(String email, String code) {
         User user = pendingUsers.get(email);
         if (user == null || !CodeGenerator.isValidCode(email, code)) {
             throw new InvalidVerificationCodeException("Неверный код подтверждения");
         }
         user.setEmail(encryptor.encrypt(email));
-        userRepository.save(user);
+        user = userRepository.save(user);
         pendingUsers.remove(email);
         CodeGenerator.removeCode(email);
         linksyCacheManager.cacheUser(user);
+        chatService.sendGreetingLetter(user);
     }
 
     public void requestPasswordChange(String email) {

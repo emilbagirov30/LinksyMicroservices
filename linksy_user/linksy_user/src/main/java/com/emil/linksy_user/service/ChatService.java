@@ -31,6 +31,8 @@ public class ChatService {
     private final LinksyCacheManager linksyCacheManager;
     private final DeletedMessagesRepository deletedMessagesRepository;
     private final LinksyEncryptor encryptor;
+    private final String greetingMessage = "Здравствуйте!\nСпасибо за регистрацию в нашем приложении!\nМы рады вас приветствовать.\nЕсли у вас возникнут вопросы или потребуется помощь, не стесняйтесь обращаться к нам.\nМы всегда готовы помочь!";
+    private final Long supportId = 3L;
     public Chat findOrCreatePersonalChat(User user1, User user2) {
         return chatRepository.findChatByUsers(user1, user2)
                 .orElseGet(() -> createNewChat(user1, user2));
@@ -52,6 +54,7 @@ public class ChatService {
         chatMemberRepository.saveAll(List.of(member1, member2));
         return chat;
     }
+
 
     public List<ChatResponse> getUserChats (Long userId){
         User user = linksyCacheManager.getUserById(userId);
@@ -335,6 +338,30 @@ public class ChatService {
 
     }
 
+    @Transactional
+    public void sendGreetingLetter (User user){
+        User support = linksyCacheManager.getUserById(supportId);
+        Chat chat = new Chat();
+        chat.setName(null);
+        chat.setIsGroup(false);
+        chat = chatRepository.save(chat);
+        ChatMember chatMember = new ChatMember();
+        chatMember.setUser(user);
+        chatMember.setChat(chat);
+
+        ChatMember chatMember2 = new ChatMember();
+        chatMember2.setUser(support);
+        chatMember2.setChat(chat);
+        chatMemberRepository.saveAll(List.of(chatMember,chatMember2));
+
+        Message message = new Message();
+        message.setChat(chat);
+        message.setSender(support);
+        message.setViewed(false);
+        message.setEdited(false);
+        message.setText(encryptor.encrypt(greetingMessage));
+        messageRepository.save(message);
+    }
 }
 
 
