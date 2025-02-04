@@ -32,6 +32,7 @@ public class FeedService {
         var filterChannels = channels.stream().filter(channel -> !channel.getOwner().getId().equals(userId)).toList();
         var posts = filterChannels.stream()
                 .flatMap(channel -> channelPostRepository.findByChannel(channel).stream())
+                .sorted((post1, post2) -> post2.getPublicationTime().compareTo(post1.getPublicationTime()))
                 .toList();
        return posts.stream().map(post -> channelService.toChannelPostResponse(user,post)).toList();
     }
