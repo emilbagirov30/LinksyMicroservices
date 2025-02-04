@@ -272,7 +272,7 @@ public class ChatService {
             DeletedMessage deletedMessage = new DeletedMessage();
             deletedMessage.setUser(user);
             deletedMessage.setMessage(message);
-            deletedMessagesRepository.save(deletedMessage);
+            if(!deletedMessagesRepository.existsByMessageAndUser(message,user)) deletedMessagesRepository.save(deletedMessage);
         }
     }
 
