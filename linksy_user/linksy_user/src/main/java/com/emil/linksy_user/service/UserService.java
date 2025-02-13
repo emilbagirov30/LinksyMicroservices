@@ -40,7 +40,9 @@ public class UserService {
     private final LinksyEncryptor encryptor;
     private final ChatService chatService;
     public void registerUser(String username, String email, String password) {
-        if (userRepository.findByEmail(email).isPresent()) {
+        var users = linksyCacheManager.getAllUsers();
+        var emails = users.stream().map(user -> encryptor.decrypt(user.getEmail())).toList();
+        if (emails.contains(email)) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
         }
         User user = new User();
