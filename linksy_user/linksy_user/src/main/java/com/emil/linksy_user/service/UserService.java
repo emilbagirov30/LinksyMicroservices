@@ -60,6 +60,7 @@ public class UserService {
     }
 
     private EmailRequest getEmailRequest(String email, String body) {
+        CodeGenerator.removeCode(email);
         String code = CodeGenerator.generate(email);
         return new EmailRequest(email, "Confirmation code", body + code + ".\n" + "Do not share it with anyone!");
     }
