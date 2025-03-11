@@ -6,6 +6,7 @@ import com.emil.linksy_user.service.ChannelService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ private final ChannelService channelService;
     public ChannelController(ChannelService channelService) {
         this.channelService = channelService;
     }
+
 
     @GetMapping("/user_channels")
     public ResponseEntity<List<ChannelResponse>> getChannels (){
@@ -184,7 +186,7 @@ private final ChannelService channelService;
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Void> handleUserNotFound(NotFoundException ex) {
+    public ResponseEntity<Void> handleNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
     }
     @ExceptionHandler(LinkAlreadyExistsException.class)

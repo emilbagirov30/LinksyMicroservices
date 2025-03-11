@@ -134,18 +134,5 @@ public class PeopleController {
     }
 
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Void> handleNotFound(NotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404
-    }
 
-
-    @ExceptionHandler(BlacklistException.class)
-    public ResponseEntity<String> handleBlacklistException(BlacklistException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage()); // 403
-    }
-    @ExceptionHandler(BlockedException.class)
-    public ResponseEntity<Void> handleUserBlockedException(BlockedException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409
-    }
 }
